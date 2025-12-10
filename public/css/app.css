@@ -1,0 +1,296 @@
+/* ===== ROOT VARIABLES ===== */
+:root {
+    --sidebar-width: 280px;
+    --header-height: 70px;
+    --footer-height: 60px;
+    --primary-color: #4e73df;
+    --primary-dark: #224abe;
+    --primary-light: #e3e6f0;
+    --secondary-color: #858796;
+    --success-color: #1cc88a;
+    --info-color: #36b9cc;
+    --warning-color: #f6c23e;
+    --danger-color: #e74a3b;
+    --light-color: #f8f9fc;
+    --dark-color: #5a5c69;
+    --border-radius: 10px;
+    --transition-speed: 0.3s;
+    --shadow: 0 4px 20px rgba(58, 59, 69, 0.12);
+    --shadow-hover: 0 8px 30px rgba(58, 59, 69, 0.18);
+}
+
+/* ===== BASE RESET ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: 'Nunito', sans-serif;
+    background-color: var(--light-color);
+    color: var(--dark-color);
+    line-height: 1.6;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+}
+
+/* ===== FIXED LAYOUT STRUCTURE ===== */
+.app-container {
+    display: flex;
+    min-height: 100vh;
+    position: relative;
+}
+
+/* Main Content Area */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    position: relative;
+    width: 100%;
+}
+
+/* Page Content (Scrollable Area) */
+.page-content {
+    flex: 1;
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+    overflow-y: auto;
+    background: var(--light-color);
+    position: relative;
+}
+
+/* Container Fluid */
+.container-fluid {
+    width: 100%;
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+/* ===== RESPONSIVE LAYOUT ===== */
+
+/* MOBILE FIRST (Default) */
+@media (max-width: 991px) {
+    /* Header fixed di mobile */
+    .header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: var(--header-height);
+        z-index: 1000;
+        background: white;
+    }
+    
+    /* Sidebar hidden by default di mobile */
+    .sidebar {
+        position: fixed;
+        top: var(--header-height); /* Mulai dari bawah header */
+        left: 0;
+        width: 280px;
+        height: calc(100vh - var(--header-height));
+        transform: translateX(-100%);
+        z-index: 999;
+        transition: transform 0.3s ease;
+    }
+    
+    .sidebar.active {
+        transform: translateX(0);
+    }
+    
+    /* Main content offset untuk header fixed */
+    .main-content {
+        margin-top: var(--header-height);
+        min-height: calc(100vh - var(--header-height));
+        width: 100%;
+        margin-left: 0;
+    }
+    
+    /* Page content padding */
+    .page-content {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+    
+    /* Footer */
+    .footer {
+        position: relative;
+        z-index: 1;
+    }
+}
+
+/* DESKTOP (≥ 992px) */
+@media (min-width: 992px) {
+    /* Sidebar fixed di kiri */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: var(--sidebar-width);
+        height: 100vh;
+        transform: translateX(0) !important;
+        z-index: 100;
+    }
+    
+    /* Header di dalam main content */
+    .header {
+        position: sticky;
+        top: 0;
+        width: 100%;
+        height: var(--header-height);
+        z-index: 101;
+        background: white;
+    }
+    
+    /* Main content dengan sidebar */
+    .main-content {
+        margin-left: var(--sidebar-width);
+        width: calc(100% - var(--sidebar-width));
+        margin-top: 0;
+        min-height: 100vh;
+    }
+    
+    /* Page content full height */
+    .page-content {
+        min-height: calc(100vh - var(--header-height) - var(--footer-height));
+    }
+}
+
+/* ===== UTILITY CLASSES ===== */
+.d-none { display: none !important; }
+.d-block { display: block !important; }
+.d-flex { display: flex !important; }
+
+@media (min-width: 768px) {
+    .d-md-none { display: none !important; }
+    .d-md-block { display: block !important; }
+    .d-md-flex { display: flex !important; }
+}
+
+@media (min-width: 992px) {
+    .d-lg-none { display: none !important; }
+    .d-lg-block { display: block !important; }
+    .d-lg-flex { display: flex !important; }
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
+}
+
+/* ===== SAFE AREA SUPPORT ===== */
+@supports (padding: max(0px)) {
+    .header {
+        padding-top: env(safe-area-inset-top);
+        height: calc(var(--header-height) + env(safe-area-inset-top));
+    }
+    
+    .sidebar {
+        padding-top: env(safe-area-inset-top);
+    }
+    
+    .footer {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}
+
+/* ===== TOUCH OPTIMIZATION ===== */
+@media (hover: none) and (pointer: coarse) {
+    button, 
+    a, 
+    input, 
+    select, 
+    textarea {
+        font-size: 16px;
+    }
+    
+    * {
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .sidebar-link:hover,
+    .dropdown-item:hover,
+    .sidebar-toggle:hover {
+        transform: none !important;
+    }
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+    .header,
+    .sidebar,
+    .sidebar-toggle,
+    .sidebar-overlay,
+    .footer,
+    .btn {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+        margin-top: 0 !important;
+        width: 100% !important;
+    }
+    
+    body {
+        background: white !important;
+        padding: 0 !important;
+    }
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* ===== FOCUS STATES ===== */
+*:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* ===== AUTH LAYOUT ===== */
+.auth-layout {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    padding: 2rem;
+}
+
+.auth-layout .card {
+    width: 100%;
+    max-width: 450px;
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
