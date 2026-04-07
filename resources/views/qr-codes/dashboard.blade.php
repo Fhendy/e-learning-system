@@ -78,11 +78,11 @@
                                 Total Scan
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $stats['total_scans'] ?? 0 }}
+                                {{ number_format($stats['total_scans'] ?? 0) }}
                             </div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-scan fa-2x text-info"></i>
+                            <i class="fas fa-camera fa-2x text-info"></i>
                         </div>
                     </div>
                 </div>
@@ -124,7 +124,7 @@
                     </a>
                 </div>
                 <div class="card-body">
-                    @if($activeQrCodes->count() > 0)
+                    @if(isset($activeQrCodes) && $activeQrCodes->count() > 0)
                         <div class="table-responsive">
                             <table class="table table-hover">
                                 <thead>
@@ -144,13 +144,19 @@
                                         </td>
                                         <td>{{ $qrCode->class->class_name ?? 'N/A' }}</td>
                                         <td>
-                                            <small>{{ $qrCode->formatted_time_range }}</small>
+                                            <small>{{ $qrCode->formatted_time_range ?? ($qrCode->start_time . ' - ' . $qrCode->end_time) }}</small>
                                             <br>
-                                            <small class="text-muted">{{ $qrCode->date->format('d/m/Y') }}</small>
+                                            <small class="text-muted">
+                                                @if($qrCode->date instanceof \Carbon\Carbon)
+                                                    {{ $qrCode->date->format('d/m/Y') }}
+                                                @else
+                                                    {{ \Carbon\Carbon::parse($qrCode->date)->format('d/m/Y') }}
+                                                @endif
+                                            </small>
                                         </td>
                                         <td>
-                                            <span class="badge bg-{{ $qrCode->status_color }}">
-                                                {{ $qrCode->status_text }}
+                                            <span class="badge bg-{{ $qrCode->status_color ?? 'secondary' }}">
+                                                {{ $qrCode->status_text ?? ($qrCode->is_active ? 'Aktif' : 'Nonaktif') }}
                                             </span>
                                         </td>
                                         <td>
@@ -158,6 +164,12 @@
                                                class="btn btn-sm btn-outline-info">
                                                 <i class="fas fa-eye"></i>
                                             </a>
+                                            @if(isset($qrCode->is_active_now) && $qrCode->is_active_now)
+                                            <a href="{{ route('attendance.teacher.realtime', $qrCode->id) }}" 
+                                               class="btn btn-sm btn-outline-success">
+                                                <i class="fas fa-chart-line"></i>
+                                            </a>
+                                            @endif
                                         </td>
                                     </tr>
                                     @endforeach
@@ -187,23 +199,34 @@
                     </h6>
                 </div>
                 <div class="card-body">
-                    @if($recentQrCodes->count() > 0)
+                    @if(isset($recentQrCodes) && $recentQrCodes->count() > 0)
                         <div class="list-group list-group-flush">
                             @foreach($recentQrCodes as $qrCode)
                             <a href="{{ route('qr-codes.show', $qrCode) }}" 
                                class="list-group-item list-group-item-action">
                                 <div class="d-flex w-100 justify-content-between">
                                     <h6 class="mb-1">{{ $qrCode->class->class_name ?? 'N/A' }}</h6>
-                                    <small>{{ $qrCode->created_at->diffForHumans() }}</small>
+                                    <small>
+                                        @if($qrCode->created_at instanceof \Carbon\Carbon)
+                                            {{ $qrCode->created_at->diffForHumans() }}
+                                        @else
+                                            {{ \Carbon\Carbon::parse($qrCode->created_at)->diffForHumans() }}
+                                        @endif
+                                    </small>
                                 </div>
                                 <p class="mb-1">
                                     <code>{{ $qrCode->code }}</code>
-                                    <span class="badge bg-{{ $qrCode->status_color }} ms-2">
-                                        {{ $qrCode->status_text }}
+                                    <span class="badge bg-{{ $qrCode->status_color ?? 'secondary' }} ms-2">
+                                        {{ $qrCode->status_text ?? ($qrCode->is_active ? 'Aktif' : 'Nonaktif') }}
                                     </span>
                                 </p>
                                 <small class="text-muted">
-                                    {{ $qrCode->date->format('d/m/Y') }} • {{ $qrCode->formatted_time_range }}
+                                    @if($qrCode->date instanceof \Carbon\Carbon)
+                                        {{ $qrCode->date->format('d/m/Y') }}
+                                    @else
+                                        {{ \Carbon\Carbon::parse($qrCode->date)->format('d/m/Y') }}
+                                    @endif
+                                     • {{ $qrCode->formatted_time_range ?? ($qrCode->start_time . ' - ' . $qrCode->end_time) }}
                                 </small>
                             </a>
                             @endforeach
@@ -235,7 +258,7 @@
                     </h6>
                 </div>
                 <div class="card-body">
-                    @if(!empty($qrActivityChart['labels']))
+                    @if(isset($qrActivityChart) && !empty($qrActivityChart['labels']))
                         <div class="chart-area">
                             <canvas id="qrActivityChart"></canvas>
                         </div>
@@ -258,21 +281,26 @@
                     </h6>
                 </div>
                 <div class="card-body">
-                    @if($upcomingQrCodes->count() > 0)
+                    @if(isset($upcomingQrCodes) && $upcomingQrCodes->count() > 0)
                         <div class="list-group list-group-flush">
                             @foreach($upcomingQrCodes as $qrCode)
                             <div class="list-group-item">
                                 <div class="d-flex w-100 justify-content-between">
                                     <h6 class="mb-1">{{ $qrCode->class->class_name ?? 'N/A' }}</h6>
                                     <small class="text-{{ $qrCode->is_active_now ? 'success' : 'warning' }}">
-                                        {{ $qrCode->time_until_start }}
+                                        {{ $qrCode->time_until_start ?? 'Mendatang' }}
                                     </small>
                                 </div>
                                 <p class="mb-1">
                                     <code>{{ $qrCode->code }}</code>
                                 </p>
                                 <small class="text-muted">
-                                    {{ $qrCode->date->format('d/m/Y') }} • {{ $qrCode->formatted_time_range }}
+                                    @if($qrCode->date instanceof \Carbon\Carbon)
+                                        {{ $qrCode->date->format('d/m/Y') }}
+                                    @else
+                                        {{ \Carbon\Carbon::parse($qrCode->date)->format('d/m/Y') }}
+                                    @endif
+                                     • {{ $qrCode->formatted_time_range ?? ($qrCode->start_time . ' - ' . $qrCode->end_time) }}
                                 </small>
                             </div>
                             @endforeach
@@ -289,7 +317,7 @@
     </div>
 
     <!-- Row 3: Class Distribution -->
-    @if($classDistribution->count() > 0)
+    @if(isset($classDistribution) && $classDistribution->count() > 0)
     <div class="row">
         <div class="col-12">
             <div class="card shadow mb-4">
@@ -322,7 +350,7 @@
                                         @foreach($classDistribution as $class)
                                         <tr>
                                             <td>
-                                                <span class="badge" style="background-color: {{ $class->color }}">
+                                                <span class="badge" style="background-color: {{ $class->color ?? '#4e73df' }}">
                                                     {{ $class->class_name }}
                                                 </span>
                                             </td>
@@ -384,81 +412,137 @@
 .list-group-item:last-child {
     border-bottom: none;
 }
+.text-xs {
+    font-size: 0.7rem;
+}
+.text-gray-800 {
+    color: #5a5c69;
+}
+.font-weight-bold {
+    font-weight: 700;
+}
 </style>
 @endpush
 
 @push('scripts')
 <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // QR Activity Chart
-    @if(!empty($qrActivityChart['labels']))
-    var ctx = document.getElementById('qrActivityChart').getContext('2d');
-    var qrActivityChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: @json($qrActivityChart['labels']),
-            datasets: [{
-                label: 'Dibuat',
-                data: @json($qrActivityChart['created']),
-                borderColor: '#4e73df',
-                backgroundColor: 'rgba(78, 115, 223, 0.05)',
-                tension: 0.4,
-                fill: true
-            }, {
-                label: 'Digunakan',
-                data: @json($qrActivityChart['used']),
-                borderColor: '#1cc88a',
-                backgroundColor: 'rgba(28, 200, 138, 0.05)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top'
-                }
+    @if(isset($qrActivityChart) && !empty($qrActivityChart['labels']))
+    var ctx = document.getElementById('qrActivityChart');
+    if (ctx) {
+        var qrActivityChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: @json($qrActivityChart['labels']),
+                datasets: [{
+                    label: 'Dibuat',
+                    data: @json($qrActivityChart['created']),
+                    borderColor: '#4e73df',
+                    backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#4e73df',
+                    pointBorderColor: '#fff',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }, {
+                    label: 'Digunakan',
+                    data: @json($qrActivityChart['used']),
+                    borderColor: '#1cc88a',
+                    backgroundColor: 'rgba(28, 200, 138, 0.05)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#1cc88a',
+                    pointBorderColor: '#fff',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        precision: 0
+            options: {
+                maintainAspectRatio: false,
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            boxWidth: 10
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0,
+                            stepSize: 1
+                        },
+                        grid: {
+                            drawBorder: false
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
                     }
                 }
             }
-        }
-    });
+        });
+    }
     @endif
 
     // Class Distribution Chart
-    @if($classDistribution->count() > 0)
-    var ctx2 = document.getElementById('classDistributionChart').getContext('2d');
-    var classDistributionChart = new Chart(ctx2, {
-        type: 'doughnut',
-        data: {
-            labels: @json($classDistribution->pluck('class_name')),
-            datasets: [{
-                data: @json($classDistribution->pluck('count')),
-                backgroundColor: @json($classDistribution->pluck('color')),
-                hoverBorderColor: "rgba(234, 236, 244, 1)",
-            }],
-        },
-        options: {
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
+    @if(isset($classDistribution) && $classDistribution->count() > 0)
+    var ctx2 = document.getElementById('classDistributionChart');
+    if (ctx2) {
+        var classDistributionChart = new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: @json($classDistribution->pluck('class_name')),
+                datasets: [{
+                    data: @json($classDistribution->pluck('count')),
+                    backgroundColor: @json($classDistribution->pluck('color')),
+                    hoverBackgroundColor: @json($classDistribution->pluck('color')),
+                    hoverBorderColor: "rgba(234, 236, 244, 1)",
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }],
             },
-            cutout: '70%',
-        },
-    });
+            options: {
+                maintainAspectRatio: false,
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                cutout: '65%',
+            },
+        });
+    }
     @endif
 });
 </script>

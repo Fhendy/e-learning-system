@@ -393,7 +393,7 @@
                                     <td>{{ $attendance->notes ? Str::limit($attendance->notes, 30) : '-' }}</td>
                                     <td>
                                         <div class="btn-group btn-group-sm">
-                                            <a href="{{ route('attendance.edit', $attendance) }}" 
+                                           <a href="{{ route('attendance.teacher.edit', $attendance->id) }}">Edit</a>
                                                class="btn btn-warning" title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </a>
@@ -402,7 +402,7 @@
                                                     title="Detail">
                                                 <i class="fas fa-eye"></i>
                                             </button>
-                                            <form action="{{ route('attendance.destroy', $attendance) }}" 
+                                            <form action="{{ route('attendance.teacher.destroy', $attendance) }}" 
                                                   method="POST" class="d-inline">
                                                 @csrf
                                                 @method('DELETE')

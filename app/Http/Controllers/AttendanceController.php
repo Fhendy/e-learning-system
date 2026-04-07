@@ -1663,7 +1663,7 @@ public function processScan($code, Request $request)
             ? round(($attendedStudents / $totalStudents) * 100, 1) 
             : 0;
 
-        return view('attendance.realtime', compact(
+        return view('attendance.teacher.realtime', compact(
             'qrCode',
             'students',
             'totalStudents',
@@ -1863,7 +1863,7 @@ public function quickGenerateQr(Request $request, $classId)
                 'class_name' => $class->class_name,
                 'start_time' => $startTime->format('H:i'),
                 'end_time' => $endTime->format('H:i'),
-                'realtime_url' => route('attendance.realtime', $qrCode->id),
+                'realtime_url' => route('attendance.teacher.realtime', $qrCode->id),
             ]
         ]);
 

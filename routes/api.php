@@ -54,6 +54,9 @@ Route::middleware('auth:sanctum')->group(function () {
         
         return response()->json($stats);
     });
+    Route::post('/attendance/scan-process', [AttendanceController::class, 'scanProcess'])
+    ->name('api.attendance.scan-process')
+    ->middleware('auth'); // atau 'auth:sanctum' jika pakai sanctum
     // routes/api.php atau routes/web.php
 Route::get('/api/classes/{class}/students', function($classId) {
     $class = \App\Models\ClassModel::with('students')->findOrFail($classId);

@@ -40,8 +40,8 @@ class QRCode extends Model
         'radius' => 'integer',
         'scan_count' => 'integer',
         'duration_minutes' => 'integer',
-        'start_time' => 'string', // Simpan sebagai string
-        'end_time' => 'string',   // Simpan sebagai string
+        'start_time' => 'string',
+        'end_time' => 'string',
     ];
     
     protected $appends = [
@@ -58,7 +58,26 @@ class QRCode extends Model
         'full_start_datetime',
         'full_end_datetime',
         'status_badge_class',
+        'can_be_edited',  // Tambahkan ini
+        'can_be_deleted', // Tambahkan ini
     ];
+/**
+ * Accessor for can_be_edited
+ */
+public function getCanBeEditedAttribute()
+{
+    return $this->canBeEdited();
+}
+
+/**
+ * Accessor for can_be_deleted
+ */
+public function getCanBeDeletedAttribute()
+{
+    return $this->canBeDeleted();
+}
+    // Flag untuk mencegah infinite loop
+    private static $processing = [];
 
     /**
      * Get the class that owns the QR code.
@@ -84,69 +103,34 @@ class QRCode extends Model
         return $this->hasMany(Attendance::class, 'qr_code_id');
     }
 
-private function cleanTimeString($time)
-{
-    if (empty($time)) {
+    /**
+     * Normalize time string to HH:MM:SS format
+     */
+    private function normalizeTimeString($time)
+    {
+        if (empty($time)) {
+            return '00:00:00';
+        }
+        
+        // Jika ada spasi, ambil bagian terakhir
+        if (strpos($time, ' ') !== false) {
+            $parts = explode(' ', $time);
+            $time = end($parts);
+        }
+        
+        // Jika format HH:MM, tambahkan :00
+        if (strlen($time) === 5 && preg_match('/^[0-9]{2}:[0-9]{2}$/', $time)) {
+            return $time . ':00';
+        }
+        
+        // Jika format HH:MM:SS sudah benar
+        if (strlen($time) === 8 && preg_match('/^[0-9]{2}:[0-9]{2}:[0-9]{2}$/', $time)) {
+            return $time;
+        }
+        
+        // Default
         return '00:00:00';
     }
-    
-    // Jika ada spasi, ambil bagian terakhir
-    if (strpos($time, ' ') !== false) {
-        $parts = explode(' ', $time);
-        $time = end($parts); // Ambil bagian terakhir
-    }
-    
-    // Normalisasi format waktu
-    return $this->normalizeTime($time);
-}
-public function setStartTimeAttribute($value)
-{
-    try {
-        if (empty($value)) {
-            $this->attributes['start_time'] = '00:00:00';
-            return;
-        }
-        
-        // Bersihkan string dari spasi atau format salah
-        $cleanedValue = $this->cleanTimeString($value);
-        
-        // Simpan dalam format HH:MM:SS
-        $this->attributes['start_time'] = $cleanedValue;
-        
-    } catch (\Exception $e) {
-        \Log::warning('Error setting start_time', [
-            'value' => $value,
-            'error' => $e->getMessage()
-        ]);
-        $this->attributes['start_time'] = '00:00:00';
-    }
-}
-
-/**
- * Mutator untuk end_time - DIPERBAIKI
- */
-public function setEndTimeAttribute($value)
-{
-    try {
-        if (empty($value)) {
-            $this->attributes['end_time'] = '00:00:00';
-            return;
-        }
-        
-        // Bersihkan string dari spasi atau format salah
-        $cleanedValue = $this->cleanTimeString($value);
-        
-        // Simpan dalam format HH:MM:SS
-        $this->attributes['end_time'] = $cleanedValue;
-        
-    } catch (\Exception $e) {
-        \Log::warning('Error setting end_time', [
-            'value' => $value,
-            'error' => $e->getMessage()
-        ]);
-        $this->attributes['end_time'] = '00:00:00';
-    }
-}
 
     // =================== ACCESSORS ===================
 
@@ -155,26 +139,22 @@ public function setEndTimeAttribute($value)
      */
     public function getFormattedStartTimeAttribute()
     {
-        try {
-            $time = $this->start_time;
-            if (empty($time) || $time === '00:00:00') {
-                return '00:00';
-            }
-            
-            // Jika format sudah HH:MM
-            if (strlen($time) === 5) {
-                return $time;
-            }
-            
-            // Konversi dari HH:MM:SS ke HH:MM
-            return Carbon::createFromFormat('H:i:s', $time)->format('H:i');
-        } catch (\Exception $e) {
-            Log::warning('Error formatting start time', [
-                'time' => $this->start_time,
-                'error' => $e->getMessage()
-            ]);
+        $time = $this->start_time;
+        if (empty($time) || $time === '00:00:00') {
             return '00:00';
         }
+        
+        // Jika format sudah HH:MM
+        if (strlen($time) === 5) {
+            return $time;
+        }
+        
+        // Jika format HH:MM:SS, ambil HH:MM
+        if (strlen($time) === 8) {
+            return substr($time, 0, 5);
+        }
+        
+        return '00:00';
     }
 
     /**
@@ -182,148 +162,125 @@ public function setEndTimeAttribute($value)
      */
     public function getFormattedEndTimeAttribute()
     {
-        try {
-            $time = $this->end_time;
-            if (empty($time) || $time === '00:00:00') {
-                return '00:00';
-            }
-            
-            // Jika format sudah HH:MM
-            if (strlen($time) === 5) {
-                return $time;
-            }
-            
-            // Konversi dari HH:MM:SS ke HH:MM
-            return Carbon::createFromFormat('H:i:s', $time)->format('H:i');
-        } catch (\Exception $e) {
-            Log::warning('Error formatting end time', [
-                'time' => $this->end_time,
-                'error' => $e->getMessage()
-            ]);
+        $time = $this->end_time;
+        if (empty($time) || $time === '00:00:00') {
             return '00:00';
         }
+        
+        // Jika format sudah HH:MM
+        if (strlen($time) === 5) {
+            return $time;
+        }
+        
+        // Jika format HH:MM:SS, ambil HH:MM
+        if (strlen($time) === 8) {
+            return substr($time, 0, 5);
+        }
+        
+        return '00:00';
     }
 
     /**
-     * Get full start datetime with safe parsing
+     * Get full start datetime - FIXED (no infinite loop)
      */
-public function getFullStartDatetimeAttribute()
-{
-    try {
-        // Pastikan data yang diperlukan ada
-        if (!$this->date || !$this->start_time) {
+    public function getFullStartDatetimeAttribute()
+    {
+        $key = 'start_' . ($this->id ?? 'new');
+        
+        // Cegah infinite loop
+        if (isset(self::$processing[$key])) {
             return null;
         }
         
-        // Pastikan format tanggal benar
-        $dateString = $this->date instanceof Carbon 
-            ? $this->date->format('Y-m-d') 
-            : Carbon::parse($this->date)->format('Y-m-d');
+        self::$processing[$key] = true;
         
-        // Ambil start_time yang sudah diformat (HH:MM)
-        $startTime = $this->formatted_start_time;
-        
-        // Debug: Log data untuk troubleshooting
-        \Log::debug('Creating full_start_datetime', [
-            'qr_code_id' => $this->id,
-            'date' => $dateString,
-            'start_time_raw' => $this->start_time,
-            'formatted_start_time' => $startTime,
-        ]);
-        
-        // Pastikan format waktu benar (HH:MM:SS)
-        // Jika hanya HH:MM, tambahkan :00
-        if (strlen($startTime) === 5) {
-            $startTime .= ':00';
+        try {
+            if (!$this->date || !$this->start_time) {
+                self::$processing[$key] = false;
+                unset(self::$processing[$key]);
+                return null;
+            }
+            
+            // Format tanggal
+            if ($this->date instanceof Carbon) {
+                $dateString = $this->date->format('Y-m-d');
+            } else {
+                $dateString = Carbon::parse($this->date)->format('Y-m-d');
+            }
+            
+            // Format waktu - langsung dari start_time
+            $startTime = $this->normalizeTimeString($this->start_time);
+            
+            $datetimeString = $dateString . ' ' . $startTime;
+            $result = Carbon::createFromFormat('Y-m-d H:i:s', $datetimeString);
+            
+            self::$processing[$key] = false;
+            unset(self::$processing[$key]);
+            
+            return $result;
+            
+        } catch (\Exception $e) {
+            self::$processing[$key] = false;
+            unset(self::$processing[$key]);
+            
+            Log::warning('Error creating full_start_datetime', [
+                'qr_code_id' => $this->id ?? 'new',
+                'error' => $e->getMessage()
+            ]);
+            return null;
         }
-        
-        // Gabungkan tanggal dan waktu
-        $datetimeString = $dateString . ' ' . $startTime;
-        
-        // Parse dengan format yang tepat
-        return Carbon::createFromFormat('Y-m-d H:i:s', $datetimeString);
-        
-    } catch (\Exception $e) {
-        \Log::error('Error creating full_start_datetime', [
-            'qr_code_id' => $this->id,
-            'date' => $this->date,
-            'start_time' => $this->start_time,
-            'formatted_start_time' => $this->formatted_start_time ?? 'N/A',
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ]);
-        return null;
     }
-}
 
     /**
-     * Get full end datetime with safe parsing
+     * Get full end datetime - FIXED (no infinite loop)
      */
-public function getFullEndDatetimeAttribute()
-{
-    try {
-        // Pastikan data yang diperlukan ada
-        if (!$this->date || !$this->end_time) {
+    public function getFullEndDatetimeAttribute()
+    {
+        $key = 'end_' . ($this->id ?? 'new');
+        
+        // Cegah infinite loop
+        if (isset(self::$processing[$key])) {
             return null;
         }
         
-        // Pastikan format tanggal benar
-        $dateString = $this->date instanceof Carbon 
-            ? $this->date->format('Y-m-d') 
-            : Carbon::parse($this->date)->format('Y-m-d');
+        self::$processing[$key] = true;
         
-        // Ambil end_time yang sudah diformat (HH:MM)
-        $endTime = $this->formatted_end_time;
-        
-        // Debug: Log data untuk troubleshooting
-        \Log::debug('Creating full_end_datetime', [
-            'qr_code_id' => $this->id,
-            'date' => $dateString,
-            'end_time_raw' => $this->end_time,
-            'formatted_end_time' => $endTime,
-        ]);
-        
-        // Pastikan format waktu benar (HH:MM:SS)
-        // Jika hanya HH:MM, tambahkan :00
-        if (strlen($endTime) === 5) {
-            $endTime .= ':00';
+        try {
+            if (!$this->date || !$this->end_time) {
+                self::$processing[$key] = false;
+                unset(self::$processing[$key]);
+                return null;
+            }
+            
+            // Format tanggal
+            if ($this->date instanceof Carbon) {
+                $dateString = $this->date->format('Y-m-d');
+            } else {
+                $dateString = Carbon::parse($this->date)->format('Y-m-d');
+            }
+            
+            // Format waktu - langsung dari end_time
+            $endTime = $this->normalizeTimeString($this->end_time);
+            
+            $datetimeString = $dateString . ' ' . $endTime;
+            $result = Carbon::createFromFormat('Y-m-d H:i:s', $datetimeString);
+            
+            self::$processing[$key] = false;
+            unset(self::$processing[$key]);
+            
+            return $result;
+            
+        } catch (\Exception $e) {
+            self::$processing[$key] = false;
+            unset(self::$processing[$key]);
+            
+            Log::warning('Error creating full_end_datetime', [
+                'qr_code_id' => $this->id ?? 'new',
+                'error' => $e->getMessage()
+            ]);
+            return null;
         }
-        
-        // Gabungkan tanggal dan waktu
-        $datetimeString = $dateString . ' ' . $endTime;
-        
-        // Parse dengan format yang tepat
-        return Carbon::createFromFormat('Y-m-d H:i:s', $datetimeString);
-        
-    } catch (\Exception $e) {
-        \Log::error('Error creating full_end_datetime', [
-            'qr_code_id' => $this->id,
-            'date' => $this->date,
-            'end_time' => $this->end_time,
-            'formatted_end_time' => $this->formatted_end_time ?? 'N/A',
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ]);
-        return null;
     }
-}
-public function debugTimeInfo()
-{
-    return [
-        'id' => $this->id,
-        'code' => $this->code,
-        'date' => $this->date ? $this->date->format('Y-m-d') : null,
-        'start_time_raw' => $this->start_time,
-        'end_time_raw' => $this->end_time,
-        'formatted_start_time' => $this->formatted_start_time,
-        'formatted_end_time' => $this->formatted_end_time,
-        'full_start_datetime' => $this->full_start_datetime ? $this->full_start_datetime->format('Y-m-d H:i:s') : null,
-        'full_end_datetime' => $this->full_end_datetime ? $this->full_end_datetime->format('Y-m-d H:i:s') : null,
-        'is_active' => $this->is_active,
-        'is_active_now' => $this->is_active_now,
-        'is_expired' => $this->is_expired,
-    ];
-}
 
     /**
      * Get formatted time range
@@ -343,15 +300,11 @@ public function debugTimeInfo()
             $end = $this->full_end_datetime;
             
             if (!$start || !$end) {
-                return $this->duration_minutes ?? 30; // Default 30 menit
+                return $this->duration_minutes ?? 30;
             }
             
             return $end->diffInMinutes($start);
         } catch (\Exception $e) {
-            Log::warning('Error calculating duration', [
-                'qr_code_id' => $this->id,
-                'error' => $e->getMessage()
-            ]);
             return $this->duration_minutes ?? 30;
         }
     }
@@ -373,40 +326,10 @@ public function debugTimeInfo()
                 return 0;
             }
             
-            $remaining = $end->diffInMinutes($now);
-            return max(0, $remaining);
+            return max(0, $end->diffInMinutes($now));
         } catch (\Exception $e) {
-            Log::warning('Error calculating time remaining', [
-                'qr_code_id' => $this->id,
-                'error' => $e->getMessage()
-            ]);
             return 0;
         }
-    }
-
-    /**
-     * Get time remaining in human readable format
-     */
-    public function getTimeRemainingHumanAttribute()
-    {
-        $minutes = $this->time_remaining;
-        
-        if ($minutes === 0) {
-            return 'Berakhir';
-        }
-        
-        if ($minutes < 60) {
-            return $minutes . ' menit lagi';
-        }
-        
-        $hours = floor($minutes / 60);
-        $remainingMinutes = $minutes % 60;
-        
-        if ($remainingMinutes === 0) {
-            return $hours . ' jam lagi';
-        }
-        
-        return $hours . ' jam ' . $remainingMinutes . ' menit lagi';
     }
 
     /**
@@ -419,13 +342,8 @@ public function debugTimeInfo()
             if (!$end) {
                 return true;
             }
-            
             return now() > $end;
         } catch (\Exception $e) {
-            Log::warning('Error checking expiry', [
-                'qr_code_id' => $this->id,
-                'error' => $e->getMessage()
-            ]);
             return true;
         }
     }
@@ -455,10 +373,6 @@ public function debugTimeInfo()
             
             return $start->diffForHumans($now, ['parts' => 2]);
         } catch (\Exception $e) {
-            Log::warning('Error calculating time until start', [
-                'qr_code_id' => $this->id,
-                'error' => $e->getMessage()
-            ]);
             return 'Error';
         }
     }
@@ -483,10 +397,6 @@ public function debugTimeInfo()
             
             return $now >= $start && $now <= $end;
         } catch (\Exception $e) {
-            Log::warning('Error checking active status', [
-                'qr_code_id' => $this->id,
-                'error' => $e->getMessage()
-            ]);
             return false;
         }
     }
@@ -508,17 +418,13 @@ public function debugTimeInfo()
             return 'Aktif';
         }
         
-        // Cek apakah belum dimulai
         try {
             $start = $this->full_start_datetime;
             if ($start && now() < $start) {
                 return 'Belum dimulai';
             }
         } catch (\Exception $e) {
-            Log::warning('Error checking if not started', [
-                'qr_code_id' => $this->id,
-                'error' => $e->getMessage()
-            ]);
+            // ignore
         }
         
         return 'Selesai';
@@ -529,20 +435,14 @@ public function debugTimeInfo()
      */
     public function getStatusColorAttribute()
     {
-        switch ($this->status_text) {
-            case 'Aktif':
-                return 'success';
-            case 'Belum dimulai':
-                return 'warning';
-            case 'Kadaluarsa':
-                return 'danger';
-            case 'Nonaktif':
-                return 'secondary';
-            case 'Selesai':
-                return 'info';
-            default:
-                return 'secondary';
-        }
+        return match ($this->status_text) {
+            'Aktif' => 'success',
+            'Belum dimulai' => 'warning',
+            'Kadaluarsa' => 'danger',
+            'Nonaktif' => 'secondary',
+            'Selesai' => 'info',
+            default => 'secondary',
+        };
     }
 
     /**
@@ -550,20 +450,14 @@ public function debugTimeInfo()
      */
     public function getStatusBadgeClassAttribute()
     {
-        switch ($this->status_color) {
-            case 'success':
-                return 'badge-success';
-            case 'warning':
-                return 'badge-warning';
-            case 'danger':
-                return 'badge-danger';
-            case 'secondary':
-                return 'badge-secondary';
-            case 'info':
-                return 'badge-info';
-            default:
-                return 'badge-secondary';
-        }
+        return match ($this->status_color) {
+            'success' => 'badge-success',
+            'warning' => 'badge-warning',
+            'danger' => 'badge-danger',
+            'secondary' => 'badge-secondary',
+            'info' => 'badge-info',
+            default => 'badge-secondary',
+        };
     }
 
     /**
@@ -618,15 +512,6 @@ public function debugTimeInfo()
     }
 
     /**
-     * Get attendance percentage
-     */
-    public function getAttendancePercentage()
-    {
-        $stats = $this->getAttendanceStatistics();
-        return $stats['percentage'];
-    }
-
-    /**
      * Get total students in class
      */
     public function getTotalStudents()
@@ -656,7 +541,7 @@ public function debugTimeInfo()
     public function incrementScanCount()
     {
         $this->scan_count = $this->scan_count + 1;
-        $this->save();
+        $this->saveQuietly(); // Gunakan saveQuietly untuk menghindari event loop
         
         return $this->scan_count;
     }
@@ -699,7 +584,6 @@ public function debugTimeInfo()
             return true;
         }
         
-        // Haversine formula untuk menghitung jarak dalam meter
         $earthRadius = 6371000; // meters
         $latFrom = deg2rad($this->latitude);
         $lonFrom = deg2rad($this->longitude);
@@ -721,25 +605,16 @@ public function debugTimeInfo()
 
     // =================== SCOPES ===================
 
-    /**
-     * Scope for active QR codes
-     */
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
     }
 
-    /**
-     * Scope for today's QR codes
-     */
     public function scopeToday($query)
     {
         return $query->whereDate('date', today());
     }
 
-    /**
-     * Scope for upcoming QR codes
-     */
     public function scopeUpcoming($query)
     {
         $now = now();
@@ -753,9 +628,6 @@ public function debugTimeInfo()
             });
     }
 
-    /**
-     * Scope for expired QR codes
-     */
     public function scopeExpired($query)
     {
         $now = now();
@@ -768,9 +640,6 @@ public function debugTimeInfo()
         });
     }
 
-    /**
-     * Scope for currently active QR codes
-     */
     public function scopeCurrentlyActive($query)
     {
         $now = now();
@@ -780,55 +649,69 @@ public function debugTimeInfo()
             ->where('end_time', '>=', $now->format('H:i:s'));
     }
 
-    /**
-     * Scope for QR codes by class
-     */
     public function scopeForClass($query, $classId)
     {
         return $query->where('class_id', $classId);
     }
 
-    /**
-     * Scope for QR codes by creator
-     */
     public function scopeByCreator($query, $userId)
     {
         return $query->where('created_by', $userId);
     }
 
-    /**
-     * Scope for QR codes with location restriction
-     */
     public function scopeWithLocationRestriction($query)
     {
         return $query->where('location_restricted', true);
     }
 
     /**
-     * Check if QR code can be edited
-     */
-    public function canBeEdited()
-    {
-        return !$this->is_expired && $this->is_active;
+ * Check if QR code can be edited
+ * 
+ * @return bool
+ */
+public function canBeEdited()
+{
+    try {
+        // Pastikan properti ada
+        $isExpired = property_exists($this, 'is_expired') ? $this->is_expired : true;
+        $isActive = $this->is_active ?? false;
+        
+        // QR code bisa diedit jika:
+        // 1. Belum expired
+        // 2. Aktif
+        return $isActive && !$isExpired;
+    } catch (\Exception $e) {
+        Log::warning('Error checking if QR code can be edited', [
+            'qr_code_id' => $this->id ?? null,
+            'error' => $e->getMessage()
+        ]);
+        return false;
     }
+}
 
-    /**
-     * Check if QR code can be deleted
-     */
-    public function canBeDeleted()
-    {
+/**
+ * Check if QR code can be deleted
+ * 
+ * @return bool
+ */
+public function canBeDeleted()
+{
+    try {
+        // QR code bisa dihapus jika belum ada absensi
         return $this->attendances()->count() === 0;
+    } catch (\Exception $e) {
+        Log::warning('Error checking if QR code can be deleted', [
+            'qr_code_id' => $this->id ?? null,
+            'error' => $e->getMessage()
+        ]);
+        return false;
     }
-
-    /**
-     * Get QR code image URL
-     */
+}
     public function getImageUrl()
     {
         if (!$this->qr_code_image) {
             return null;
         }
-        
         return asset('storage/' . $this->qr_code_image);
     }
 
@@ -865,7 +748,6 @@ public function debugTimeInfo()
             'duration_minutes' => $this->duration_minutes_calculated,
             'notes' => $this->notes,
             'time_remaining' => $this->time_remaining,
-            'time_remaining_human' => $this->time_remaining_human ?? $this->time_remaining . ' menit',
             'status' => $this->status_text,
             'status_color' => $this->status_color,
         ];
@@ -889,7 +771,6 @@ public function debugTimeInfo()
             'end_datetime' => $end ? $end->format('Y-m-d H:i:s') : null,
             'current_datetime' => $now->format('Y-m-d H:i:s'),
             'time_remaining' => $this->time_remaining,
-            'time_remaining_human' => $this->time_remaining_human ?? $this->time_remaining . ' menit',
             'time_until_start' => $this->time_until_start,
         ];
     }
@@ -903,112 +784,18 @@ public function debugTimeInfo()
     }
 
     /**
-     * Static method untuk debugging
-     */
-    public static function debugLatest()
-    {
-        $qr = self::latest()->first();
-        if (!$qr) {
-            return "No QR Code found";
-        }
-        
-        $now = now();
-        $start = $qr->full_start_datetime;
-        $end = $qr->full_end_datetime;
-        
-        return [
-            'id' => $qr->id,
-            'code' => $qr->code,
-            'date' => $qr->date ? $qr->date->format('Y-m-d') : null,
-            'start_time_raw' => $qr->start_time,
-            'end_time_raw' => $qr->end_time,
-            'formatted_start' => $qr->formatted_start_time,
-            'formatted_end' => $qr->formatted_end_time,
-            'full_start' => $start ? $start->format('Y-m-d H:i:s') : 'Invalid',
-            'full_end' => $end ? $end->format('Y-m-d H:i:s') : 'Invalid',
-            'now' => $now->format('Y-m-d H:i:s'),
-            'is_active' => $qr->is_active,
-            'is_active_now' => $qr->is_active_now,
-            'is_expired' => $qr->is_expired,
-            'status_text' => $qr->status_text,
-            'is_future' => $start && $now < $start,
-            'is_past' => $end && $now > $end,
-            'is_between' => $start && $end && $now->between($start, $end),
-        ];
-    }
-
-    /**
-     * Helper method untuk memastikan format waktu konsisten
-     */
-    public static function normalizeTime($time)
-    {
-        if (empty($time)) {
-            return '00:00:00';
-        }
-        
-        try {
-            if (strlen($time) === 5) { // HH:MM
-                return $time . ':00';
-            } elseif (strlen($time) === 8) { // HH:MM:SS
-                // Validasi format
-                if (preg_match('/^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/', $time)) {
-                    return $time;
-                } else {
-                    // Coba parse
-                    return Carbon::parse($time)->format('H:i:s');
-                }
-            } else {
-                // Coba parse format lain
-                return Carbon::parse($time)->format('H:i:s');
-            }
-        } catch (\Exception $e) {
-            Log::warning('Error normalizing time', [
-                'time' => $time,
-                'error' => $e->getMessage()
-            ]);
-            return '00:00:00';
-        }
-    }
-
-    /**
-     * Validate waktu mulai dan selesai
-     */
-    public function validateTimes()
-    {
-        try {
-            $start = $this->full_start_datetime;
-            $end = $this->full_end_datetime;
-            
-            if (!$start || !$end) {
-                return false;
-            }
-            
-            return $end > $start;
-        } catch (\Exception $e) {
-            Log::warning('Error validating times', [
-                'qr_code_id' => $this->id,
-                'error' => $e->getMessage()
-            ]);
-            return false;
-        }
-    }
-
-    /**
      * Cek apakah QR code valid untuk scan sekarang
      */
     public function isValidForScan($studentId = null)
     {
-        // Cek apakah aktif
         if (!$this->is_active) {
             return ['valid' => false, 'message' => 'QR Code tidak aktif'];
         }
         
-        // Cek apakah sudah expired
         if ($this->is_expired) {
             return ['valid' => false, 'message' => 'QR Code sudah kadaluarsa'];
         }
         
-        // Cek apakah sudah aktif
         if (!$this->is_active_now) {
             $start = $this->full_start_datetime;
             if ($start && now() < $start) {
@@ -1016,12 +803,10 @@ public function debugTimeInfo()
                     'valid' => false, 
                     'message' => 'QR Code belum aktif. Akan aktif pada ' . $start->format('H:i')
                 ];
-            } else {
-                return ['valid' => false, 'message' => 'QR Code sudah selesai'];
             }
+            return ['valid' => false, 'message' => 'QR Code sudah selesai'];
         }
         
-        // Cek apakah siswa sudah absen
         if ($studentId) {
             $existing = $this->attendances()->where('student_id', $studentId)->first();
             if ($existing) {

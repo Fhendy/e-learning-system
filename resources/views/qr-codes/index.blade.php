@@ -25,6 +25,14 @@
     </div>
     @endif
 
+    @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    @endif
+
     <!-- Filter Section -->
     <div class="card shadow mb-4">
         <div class="card-header py-3">
@@ -61,6 +69,7 @@
                             <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Aktif</option>
                             <option value="expired" {{ request('status') == 'expired' ? 'selected' : '' }}>Kadaluarsa</option>
                             <option value="upcoming" {{ request('status') == 'upcoming' ? 'selected' : '' }}>Mendatang</option>
+                            <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Nonaktif</option>
                         </select>
                     </div>
                 </div>
@@ -69,7 +78,7 @@
                         <i class="bi bi-filter me-2"></i>Filter
                     </button>
                     <a href="{{ route('qr-codes.index') }}" class="btn btn-secondary">
-                        Reset
+                        <i class="bi bi-arrow-repeat me-2"></i>Reset
                     </a>
                 </div>
             </form>
@@ -101,57 +110,84 @@
                     <tbody>
                         @foreach($qrCodes as $qrCode)
                         <tr>
-                            <td>{{ $loop->iteration + ($qrCodes->currentPage() - 1) * $qrCodes->perPage() }}</td>
+                            <td>
+                                {{ $loop->iteration + ($qrCodes->currentPage() - 1) * $qrCodes->perPage() }}
+                             </td>
                             <td>
                                 <code>{{ $qrCode->code }}</code>
                                 @if($qrCode->location_restricted)
-                                <br><small class="text-muted"><i class="bi bi-geo-alt"></i> Terbatas lokasi</small>
+                                    <br><small class="text-muted"><i class="bi bi-geo-alt"></i> Terbatas lokasi</small>
                                 @endif
-                            </td>
+                             </td>
                             <td>
-                                <strong>{{ $qrCode->class->class_name }}</strong>
-                                <br><small>{{ $qrCode->class->subject }}</small>
-                            </td>
+                                <strong>{{ $qrCode->class->class_name ?? 'N/A' }}</strong>
+                                @if(isset($qrCode->class->subject))
+                                    <br><small>{{ $qrCode->class->subject }}</small>
+                                @endif
+                             </td>
                             <td>
-                                {{ $qrCode->date->format('d/m/Y') }}
-                                <br><small class="text-muted">{{ $qrCode->date->diffForHumans() }}</small>
-                            </td>
+                                @php
+                                    $dateObj = $qrCode->date instanceof \Carbon\Carbon 
+                                        ? $qrCode->date 
+                                        : \Carbon\Carbon::parse($qrCode->date);
+                                @endphp
+                                {{ $dateObj->format('d/m/Y') }}
+                                <br><small class="text-muted">{{ $dateObj->diffForHumans() }}</small>
+                             </td>
                             <td>
-                                {{ \Carbon\Carbon::parse($qrCode->start_time)->format('H:i') }} - 
-                                {{ \Carbon\Carbon::parse($qrCode->end_time)->format('H:i') }}
+                                @php
+                                    $startTime = $qrCode->start_time;
+                                    $endTime = $qrCode->end_time;
+                                    if (strlen($startTime) === 5) $startTime .= ':00';
+                                    if (strlen($endTime) === 5) $endTime .= ':00';
+                                @endphp
+                                {{ \Carbon\Carbon::parse($startTime)->format('H:i') }} - 
+                                {{ \Carbon\Carbon::parse($endTime)->format('H:i') }}
                                 <br>
                                 <small class="text-muted">
-                                    {{ $qrCode->duration_minutes_calculated }} menit
+                                    {{ $qrCode->duration_minutes ?? $qrCode->duration_minutes_calculated ?? '?' }} menit
                                 </small>
-                            </td>
-<td>
-    <span class="badge bg-{{ $qrCode->status_color }}">
-        {{ $qrCode->status_text }}
-    </span>
-    <br>
-    <small class="text-muted">
-        @if($qrCode->isActive())
-            Sisa: {{ $qrCode->time_remaining }} menit
-        @endif
-    </small>
-</td>
+                             </td>
+                            <td>
+                                @php
+                                    $statusColor = $qrCode->status_color ?? 'secondary';
+                                    $statusText = $qrCode->status_text ?? ($qrCode->is_active ? 'Aktif' : 'Nonaktif');
+                                @endphp
+                                <span class="badge bg-{{ $statusColor }}">
+                                    {{ $statusText }}
+                                </span>
+                                @if(isset($qrCode->is_active_now) && $qrCode->is_active_now)
+                                    <br>
+                                    <small class="text-success">
+                                        <i class="bi bi-clock-history"></i> 
+                                        Sisa: {{ $qrCode->time_remaining ?? '?' }} menit
+                                    </small>
+                                @endif
+                             </td>
                             <td>
                                 <div class="text-center">
-                                    <div class="h5 mb-0">{{ $qrCode->getAttendanceCount() }}</div>
-                                    <small class="text-muted">siswa</small>
+                                    <div class="h5 mb-0">{{ $qrCode->scan_count ?? 0 }}</div>
+                                    <small class="text-muted">scan</small>
+                                    @php
+                                        $attendanceCount = $qrCode->attendances ? $qrCode->attendances->count() : 0;
+                                    @endphp
+                                    <div>
+                                        <small class="text-muted">{{ $attendanceCount }} siswa</small>
+                                    </div>
                                 </div>
-                            </td>
+                             </td>
                             <td>
                                 <div class="btn-group btn-group-sm">
                                     <a href="{{ route('qr-codes.show', $qrCode) }}" 
                                        class="btn btn-info" title="Detail">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <a href="{{ route('qr-codes.edit', $qrCode) }}" 
-                                       class="btn btn-warning" title="Edit">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    @if($qrCode->isActive())
+@if($qrCode->can_be_edited)
+    <a href="{{ route('qr-codes.edit', $qrCode) }}" class="btn btn-warning btn-sm">
+        <i class="bi bi-pencil"></i> Edit
+    </a>
+@endif
+                                    @if($qrCode->is_active)
                                     <form action="{{ route('qr-codes.deactivate', $qrCode) }}" 
                                           method="POST" class="d-inline">
                                         @csrf
@@ -172,18 +208,17 @@
                                         </button>
                                     </form>
                                     @endif
-                                    <form action="{{ route('qr-codes.destroy', $qrCode) }}" 
-                                          method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger" 
-                                                title="Hapus" 
-                                                onclick="return confirm('Hapus QR Code ini?')">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
+@if($qrCode->can_be_deleted)
+    <form action="{{ route('qr-codes.destroy', $qrCode) }}" method="POST" class="d-inline">
+        @csrf
+        @method('DELETE')
+        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Hapus QR Code ini?')">
+            <i class="bi bi-trash"></i> Hapus
+        </button>
+    </form>
+@endif
                                 </div>
-                            </td>
+                             </td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -195,7 +230,7 @@
             </div>
             @else
             <div class="text-center py-5">
-                <i class="bi bi-qr-code fa-3x text-gray-300 mb-3"></i>
+                <i class="bi bi-qr-code fs-1 text-gray-300 mb-3"></i>
                 <h5 class="text-muted">Belum ada QR Code</h5>
                 <p class="text-muted">Mulai dengan membuat QR Code pertama Anda</p>
                 <a href="{{ route('qr-codes.create') }}" class="btn btn-primary">
@@ -208,13 +243,44 @@
 </div>
 
 <script>
-// Auto refresh jika ada QR Code aktif
-setTimeout(function() {
-    const hasActiveQr = document.querySelector('.badge.bg-success');
-    if (hasActiveQr) {
-        location.reload();
+// Tooltip initialization (if using Bootstrap 5)
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+    tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+
+// Optional: Auto refresh jika ada QR Code aktif (every 30 seconds)
+let refreshInterval = null;
+
+function startAutoRefresh() {
+    const hasActiveQr = document.querySelector('.badge.bg-success, .badge.bg-warning');
+    if (hasActiveQr && !refreshInterval) {
+        refreshInterval = setInterval(function() {
+            // Check if page is still visible
+            if (!document.hidden) {
+                location.reload();
+            }
+        }, 30000); // Refresh every 30 seconds
+    } else if (!hasActiveQr && refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
     }
-}, 30000); // Refresh setiap 30 detik
+}
+
+// Start auto refresh if there are active QR codes
+document.addEventListener('DOMContentLoaded', startAutoRefresh);
+
+// Stop auto refresh when page is hidden to save resources
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden && refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+    } else if (!document.hidden) {
+        startAutoRefresh();
+    }
+});
 </script>
 
 <style>
@@ -223,10 +289,23 @@ code {
     padding: 2px 6px;
     border-radius: 4px;
     font-family: monospace;
+    font-size: 11px;
 }
 .badge {
-    font-size: 12px;
+    font-size: 11px;
     padding: 5px 8px;
+}
+.btn-group .btn {
+    padding: 0.25rem 0.5rem;
+}
+.table td {
+    vertical-align: middle;
+}
+.text-gray-300 {
+    color: #dee2e6;
+}
+.fs-1 {
+    font-size: 3rem;
 }
 </style>
 @endsection

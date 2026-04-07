@@ -111,6 +111,13 @@
                                     @enderror
                                 </div>
                             </div>
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <button type="button" id="getCurrentLocation" class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-map-marker-alt"></i> Gunakan Lokasi Saya
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="row mb-3">
@@ -127,7 +134,7 @@
                             <a href="{{ route('qr-codes.index') }}" class="btn btn-secondary">
                                 <i class="fas fa-arrow-left"></i> Kembali
                             </a>
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
                                 <i class="fas fa-qrcode"></i> Generate QR Code
                             </button>
                         </div>
@@ -139,38 +146,70 @@
         <div class="col-md-4">
             <!-- Quick Generate Section -->
             <div class="card mb-3">
-                <div class="card-header">
+                <div class="card-header bg-warning">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-bolt text-warning me-2"></i>Generate Cepat
+                        <i class="fas fa-bolt text-dark me-2"></i>Generate Cepat (30 menit)
                     </h5>
                 </div>
                 <div class="card-body">
-                    @foreach($classes as $class)
-                    <div class="d-grid gap-2 mb-2">
-                        <button class="btn btn-outline-primary quick-generate-btn" 
-                                data-class-id="{{ $class->id }}"
-                                data-class-name="{{ $class->class_name }}">
-                            <i class="fas fa-qrcode me-2"></i>{{ $class->class_name }} (30 menit)
-                        </button>
-                    </div>
-                    @endforeach
+                    @if($classes->count() > 0)
+                        @foreach($classes as $class)
+                        <div class="d-grid gap-2 mb-2">
+                            <button class="btn btn-outline-primary quick-generate-btn" 
+                                    data-class-id="{{ $class->id }}"
+                                    data-class-name="{{ $class->class_name }}">
+                                <i class="fas fa-qrcode me-2"></i>{{ $class->class_name }}
+                            </button>
+                        </div>
+                        @endforeach
+                    @else
+                        <div class="alert alert-warning mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Belum ada kelas yang tersedia. Silakan buat kelas terlebih dahulu.
+                        </div>
+                    @endif
                 </div>
             </div>
             
             <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Informasi</h5>
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Informasi
+                    </h5>
                 </div>
                 <div class="card-body">
                     <div class="alert alert-warning">
                         <h6><i class="fas fa-exclamation-triangle"></i> Perhatian:</h6>
-                        <ul class="mb-0">
+                        <ul class="mb-0 small">
                             <li>QR Code hanya aktif pada tanggal dan waktu yang ditentukan</li>
                             <li>Siswa hanya dapat melakukan absensi 1 kali per QR Code</li>
                             <li>QR Code akan otomatis dinonaktifkan setelah waktu berakhir</li>
+                            <li>Pastikan waktu selesai setelah waktu mulai</li>
                         </ul>
                     </div>
+                    <hr>
+                    <h6><i class="fas fa-lightbulb text-warning me-2"></i>Tips:</h6>
+                    <ul class="small">
+                        <li>Gunakan fitur "Generate Cepat" untuk membuat QR Code dengan durasi 30 menit</li>
+                        <li>Jika membatasi lokasi, pastikan radius mencukupi area kelas</li>
+                        <li>QR Code dapat didownload dan dicetak untuk dibagikan ke siswa</li>
+                    </ul>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h6>Memproses QR Code...</h6>
+                <p class="text-muted small mb-0">Mohon tunggu sebentar</p>
             </div>
         </div>
     </div>
@@ -183,6 +222,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('qrCodeForm');
     const locationCheckbox = document.getElementById('location_restricted');
     const locationFields = document.getElementById('location_fields');
+    const submitBtn = document.getElementById('submitBtn');
+    const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
     
     // Toggle location fields
     if (locationCheckbox) {
@@ -190,15 +231,65 @@ document.addEventListener('DOMContentLoaded', function() {
             if (this.checked) {
                 locationFields.style.display = 'block';
                 // Set required attribute for location fields
-                document.getElementById('latitude').required = true;
-                document.getElementById('longitude').required = true;
-                document.getElementById('radius').required = true;
+                const latInput = document.getElementById('latitude');
+                const lngInput = document.getElementById('longitude');
+                const radiusInput = document.getElementById('radius');
+                
+                if (latInput) latInput.required = true;
+                if (lngInput) lngInput.required = true;
+                if (radiusInput) radiusInput.required = true;
             } else {
                 locationFields.style.display = 'none';
                 // Remove required attribute
-                document.getElementById('latitude').required = false;
-                document.getElementById('longitude').required = false;
-                document.getElementById('radius').required = false;
+                const latInput = document.getElementById('latitude');
+                const lngInput = document.getElementById('longitude');
+                const radiusInput = document.getElementById('radius');
+                
+                if (latInput) latInput.required = false;
+                if (lngInput) lngInput.required = false;
+                if (radiusInput) radiusInput.required = false;
+            }
+        });
+    }
+    
+    // Get current location button
+    const getLocationBtn = document.getElementById('getCurrentLocation');
+    if (getLocationBtn) {
+        getLocationBtn.addEventListener('click', function() {
+            if (navigator.geolocation) {
+                getLocationBtn.disabled = true;
+                getLocationBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mendapatkan lokasi...';
+                
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        document.getElementById('latitude').value = position.coords.latitude;
+                        document.getElementById('longitude').value = position.coords.longitude;
+                        getLocationBtn.disabled = false;
+                        getLocationBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Gunakan Lokasi Saya';
+                        alert('Lokasi berhasil didapatkan!');
+                    },
+                    function(error) {
+                        getLocationBtn.disabled = false;
+                        getLocationBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Gunakan Lokasi Saya';
+                        let errorMessage = 'Gagal mendapatkan lokasi: ';
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage += 'Izin lokasi ditolak.';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage += 'Informasi lokasi tidak tersedia.';
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage += 'Waktu permintaan habis.';
+                                break;
+                            default:
+                                errorMessage += error.message;
+                        }
+                        alert(errorMessage);
+                    }
+                );
+            } else {
+                alert('Browser Anda tidak mendukung geolocation.');
             }
         });
     }
@@ -210,6 +301,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const className = this.dataset.className;
             
             if (confirm(`Generate QR Code untuk kelas ${className} selama 30 menit?`)) {
+                // Show loading
+                loadingModal.show();
+                
                 fetch(`/attendance/quick-generate-qr/${classId}`, {
                     method: 'POST',
                     headers: {
@@ -220,18 +314,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .then(response => response.json())
                 .then(data => {
+                    loadingModal.hide();
+                    
                     if (data.success) {
                         alert('QR Code berhasil dibuat!');
-                        if (data.data.realtime_url) {
+                        if (data.data && data.data.id) {
+                            window.location.href = `/qr-codes/${data.data.id}`;
+                        } else if (data.data && data.data.realtime_url) {
                             window.location.href = data.data.realtime_url;
+                        } else {
+                            window.location.reload();
                         }
                     } else {
-                        alert('Error: ' + data.message);
+                        alert('Error: ' + (data.message || 'Terjadi kesalahan'));
                     }
                 })
                 .catch(error => {
+                    loadingModal.hide();
                     console.error('Error:', error);
-                    alert('Terjadi kesalahan.');
+                    alert('Terjadi kesalahan saat membuat QR Code. Silakan coba lagi.');
                 });
             }
         });
@@ -254,8 +355,68 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             
+            // If location restricted, validate coordinates
+            if (locationCheckbox && locationCheckbox.checked) {
+                const lat = document.getElementById('latitude').value;
+                const lng = document.getElementById('longitude').value;
+                const radius = document.getElementById('radius').value;
+                
+                if (!lat || !lng) {
+                    e.preventDefault();
+                    alert('Mohon isi Latitude dan Longitude untuk pembatasan lokasi.');
+                    return false;
+                }
+                
+                if (lat < -90 || lat > 90) {
+                    e.preventDefault();
+                    alert('Latitude harus antara -90 dan 90.');
+                    return false;
+                }
+                
+                if (lng < -180 || lng > 180) {
+                    e.preventDefault();
+                    alert('Longitude harus antara -180 dan 180.');
+                    return false;
+                }
+                
+                if (!radius || radius < 10 || radius > 1000) {
+                    e.preventDefault();
+                    alert('Radius harus antara 10 dan 1000 meter.');
+                    return false;
+                }
+            }
+            
+            // Show loading on submit
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Memproses...';
+            loadingModal.show();
+            
             return true;
         });
+    }
+    
+    // Auto-calculate duration from start and end time
+    const startTimeInput = document.getElementById('start_time');
+    const endTimeInput = document.getElementById('end_time');
+    const durationInput = document.getElementById('duration_minutes');
+    
+    function calculateDuration() {
+        if (startTimeInput.value && endTimeInput.value) {
+            const start = new Date(`2000-01-01T${startTimeInput.value}`);
+            const end = new Date(`2000-01-01T${endTimeInput.value}`);
+            
+            if (end > start) {
+                const diffMinutes = Math.round((end - start) / (1000 * 60));
+                if (durationInput && diffMinutes > 0) {
+                    durationInput.value = diffMinutes;
+                }
+            }
+        }
+    }
+    
+    if (startTimeInput && endTimeInput) {
+        startTimeInput.addEventListener('change', calculateDuration);
+        endTimeInput.addEventListener('change', calculateDuration);
     }
 });
 </script>

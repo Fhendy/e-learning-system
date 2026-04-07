@@ -119,92 +119,77 @@ Route::middleware('auth')->group(function () {
             ->name('get-submission');
     });
     
-// =================== ATTENDANCE ROUTES ===================
-Route::prefix('attendance')->name('attendance.')->group(function () {
-    
-    // ===== SCAN QR CODE ROUTES =====
-    // Halaman scan QR code untuk siswa
-    Route::get('/scan', [AttendanceController::class, 'scanPage'])
-        ->name('scan.page')
-        ->middleware('role:student');
-    
-    // Process QR code scan dengan code di URL
-    Route::get('/scan/{code}', [AttendanceController::class, 'scanQrCode'])
-        ->name('scan.code')
-        ->middleware('role:student');
-    
-    // Process scan form submission
-    Route::post('/scan/{code}', [AttendanceController::class, 'processScan'])
-        ->name('scan.process')
-        ->middleware('role:student');
+    // =================== ATTENDANCE ROUTES ===================
+    Route::prefix('attendance')->name('attendance.')->middleware('auth')->group(function () {
         
-    // Confirm attendance page
-    Route::get('/scan/{code}/confirm', [AttendanceController::class, 'showConfirm'])
-        ->name('scan.confirm')
-        ->middleware('role:student');
-    
-    // ===== ROUTES UNTUK SEMUA ROLE =====
-    // Class attendance (untuk guru melihat absensi kelas)
-    Route::get('/class/{class}', [AttendanceController::class, 'classAttendance'])
-        ->name('class.show')
-        ->middleware('role:teacher,guru,admin');
-    
-    // Student attendance detail
-    Route::get('/student/{class}/{student}', [AttendanceController::class, 'studentAttendance'])
-        ->name('student.detail')
-        ->middleware('role:teacher,guru,admin');
-    
-    // ===== ROUTES UNTUK GURU =====
-    Route::prefix('teacher')->name('teacher.')->middleware('role:teacher,guru,admin')->group(function () {
-        // Dashboard attendance guru
-        Route::get('/', [AttendanceController::class, 'indexTeacher'])->name('index');
+        // ===== SCAN QR CODE ROUTES (SISWA) =====
+        Route::middleware('role:student')->group(function () {
+            Route::get('/scan', [AttendanceController::class, 'scanPage'])->name('scan.page');
+            Route::get('/scan/{code}', [AttendanceController::class, 'scanQrCode'])->name('scan.code');
+            Route::post('/scan/{code}', [AttendanceController::class, 'processScan'])->name('scan.process');
+            Route::get('/scan/{code}/confirm', [AttendanceController::class, 'showConfirm'])->name('scan.confirm');
+        });
         
-        // Class attendance detail (statistik)
-        Route::get('/class-detail/{class}', [AttendanceController::class, 'showClass'])->name('class.detail');
-        
-        // Mark attendance (AJAX)
-        Route::post('/mark', [AttendanceController::class, 'markAttendance'])->name('mark');
-        
-        // Export - ROUTE INI SUDAH ADA
-        Route::get('/export', [AttendanceController::class, 'export'])->name('export');
-        
-        // Manual entry
-        Route::get('/manual/create', [AttendanceController::class, 'createManual'])->name('manual.create');
-        Route::post('/manual/store', [AttendanceController::class, 'storeManual'])->name('manual.store');
-        Route::get('/manual', [AttendanceController::class, 'createManual'])->name('manual');
-        
-        // Edit/delete
-        Route::get('/{attendance}/edit', [AttendanceController::class, 'edit'])->name('edit');
-        Route::put('/{attendance}', [AttendanceController::class, 'update'])->name('update');
-        Route::delete('/{attendance}', [AttendanceController::class, 'destroy'])->name('destroy');
-        
-        // QR Code related
-        Route::get('/qr/{qrCode}', [AttendanceController::class, 'viewQrAttendance'])->name('qr.view');
-        
-        // Bulk manual attendance
-        Route::get('/manual/bulk', [AttendanceController::class, 'createBulkManual'])->name('manual.bulk');
-        Route::post('/manual/bulk/store', [AttendanceController::class, 'storeBulkManual'])->name('manual.bulk.store');
-        
-        // Quick generate QR
-        Route::post('/quick-generate/{classId}', [AttendanceController::class, 'quickGenerateQr'])
-            ->name('quick-generate');
-        
-        // Get class students (AJAX)
-        Route::get('/class-students/{classId}', [AttendanceController::class, 'getClassStudents'])
-            ->name('class-students');
+        // ===== ROUTES UNTUK GURU =====
+        Route::prefix('teacher')->name('teacher.')->middleware('role:teacher,guru,admin')->group(function () {
+            Route::get('/', [AttendanceController::class, 'indexTeacher'])->name('index');
+            Route::get('/class-detail/{class}', [AttendanceController::class, 'showClass'])->name('class.detail');
+            Route::post('/mark', [AttendanceController::class, 'markAttendance'])->name('mark');
+            Route::get('/export', [AttendanceController::class, 'export'])->name('export');
+            Route::get('/manual/create', [AttendanceController::class, 'createManual'])->name('manual.create');
+            Route::post('/manual/store', [AttendanceController::class, 'storeManual'])->name('manual.store');
+            Route::get('/manual', [AttendanceController::class, 'createManual'])->name('manual');
             
-        // Realtime attendance monitoring
-        Route::get('/realtime/{qrCodeId}', [AttendanceController::class, 'realtimeAttendance'])
-            ->name('realtime');
+            // Edit/delete
+            Route::get('/{attendance}/edit', [AttendanceController::class, 'edit'])->name('edit');
+            Route::put('/{attendance}', [AttendanceController::class, 'update'])->name('update');
+            Route::delete('/{attendance}', [AttendanceController::class, 'destroy'])->name('destroy');
+            
+            // QR Code related
+            Route::get('/qr/{qrCode}', [AttendanceController::class, 'viewQrAttendance'])->name('qr.view');
+            
+            // Bulk manual attendance
+            Route::get('/manual/bulk', [AttendanceController::class, 'createBulkManual'])->name('manual.bulk');
+            Route::post('/manual/bulk/store', [AttendanceController::class, 'storeBulkManual'])->name('manual.bulk.store');
+            
+            // Quick generate QR
+            Route::post('/quick-generate/{classId}', [AttendanceController::class, 'quickGenerateQr'])
+                ->name('quick-generate');
+            
+            // Get class students (AJAX)
+            Route::get('/class-students/{classId}', [AttendanceController::class, 'getClassStudents'])
+                ->name('class-students');
+            
+            // Realtime attendance monitoring
+            Route::get('/realtime/{qrCodeId}', [AttendanceController::class, 'realtimeAttendance'])
+                ->name('realtime');
+            
+            // Realtime data API (AJAX)
+            Route::get('/realtime-data/{qrCodeId}', [AttendanceController::class, 'getRealtimeData'])
+                ->name('realtime.data');
+        });
+        
+        // ===== ROUTES UNTUK SISWA =====
+        Route::prefix('student')->name('student.')->middleware('role:student')->group(function () {
+            Route::get('/', [AttendanceController::class, 'indexStudent'])->name('index');
+            Route::get('/{attendance}', [AttendanceController::class, 'showStudent'])->name('show');
+            Route::get('/statistics', [AttendanceController::class, 'studentStatistics'])->name('statistics');
+        });
+        
+        // ===== CLASS ATTENDANCE ROUTES (UNTUK GURU) =====
+        Route::get('/class/{class}', [AttendanceController::class, 'classAttendance'])
+            ->name('class.show')
+            ->middleware('role:teacher,guru,admin');
+        
+        Route::get('/student/{class}/{student}', [AttendanceController::class, 'studentAttendance'])
+            ->name('student.detail')
+            ->middleware('role:teacher,guru,admin');
+        
+        // ===== API ROUTES =====
+        Route::post('/api/scan-process', [AttendanceController::class, 'scanProcess'])
+            ->name('api.scan-process')
+            ->middleware('auth');
     });
-    
-    // ===== ROUTES UNTUK SISWA =====
-    Route::prefix('student')->name('student.')->middleware('role:student')->group(function () {
-        Route::get('/', [AttendanceController::class, 'indexStudent'])->name('index');
-        Route::get('/{attendance}', [AttendanceController::class, 'showStudent'])->name('show');
-        Route::get('/statistics', [AttendanceController::class, 'studentStatistics'])->name('statistics');
-    });
-});
     
     // =================== QR CODE ROUTES ===================
     Route::prefix('qr-codes')->name('qr-codes.')->middleware('role:teacher,guru,admin')->group(function () {
@@ -223,6 +208,9 @@ Route::prefix('attendance')->name('attendance.')->group(function () {
         // Download
         Route::get('/{qrCode}/download', [QrCodeController::class, 'download'])->name('download');
         
+        // Regenerate image
+        Route::post('/{qrCode}/regenerate-image', [QrCodeController::class, 'regenerateImage'])->name('regenerate-image');
+        
         // Activation/Deactivation
         Route::post('/{qrCode}/activate', [QrCodeController::class, 'activate'])->name('activate');
         Route::post('/{qrCode}/deactivate', [QrCodeController::class, 'deactivate'])->name('deactivate');
@@ -234,12 +222,10 @@ Route::prefix('attendance')->name('attendance.')->group(function () {
         Route::get('/active/date', [QrCodeController::class, 'getActiveForDate'])->name('active.date');
         
         // Generate for class
-        Route::post('/generate-for-class', [QrCodeController::class, 'generateForClass'])
-            ->name('generate-for-class');
+        Route::post('/generate-for-class', [QrCodeController::class, 'generateForClass'])->name('generate-for-class');
         
         // Quick generate
-        Route::post('/quick-generate', [QrCodeController::class, 'quickGenerate'])
-            ->name('quick-generate');
+        Route::post('/quick-generate', [QrCodeController::class, 'quickGenerate'])->name('quick-generate');
         
         // Bulk generate
         Route::get('/bulk-create', [QrCodeController::class, 'bulkGenerate'])->name('bulk-create');
@@ -258,7 +244,7 @@ Route::prefix('attendance')->name('attendance.')->group(function () {
         Route::get('/', [ClassController::class, 'index'])->name('index');
         
         // Routes hanya untuk teacher/guru/admin
-        Route::middleware(['auth', 'role:teacher,guru,admin'])->group(function () {
+        Route::middleware(['role:teacher,guru,admin'])->group(function () {
             Route::get('/create', [ClassController::class, 'create'])->name('create');
             Route::post('/', [ClassController::class, 'store'])->name('store');
         });
@@ -267,7 +253,7 @@ Route::prefix('attendance')->name('attendance.')->group(function () {
         Route::get('/{id}', [ClassController::class, 'show'])->name('show');
         
         // Routes untuk edit/update/delete (hanya teacher/admin)
-        Route::middleware(['auth', 'role:teacher,guru,admin'])->group(function () {
+        Route::middleware(['role:teacher,guru,admin'])->group(function () {
             Route::get('/{id}/edit', [ClassController::class, 'edit'])->name('edit');
             Route::put('/{id}', [ClassController::class, 'update'])->name('update');
             Route::delete('/{id}', [ClassController::class, 'destroy'])->name('destroy');
@@ -309,11 +295,11 @@ Route::prefix('attendance')->name('attendance.')->group(function () {
         // AJAX routes
         Route::get('/search', [StudentController::class, 'search'])->name('search');
         
-        // IMPORT ROUTES (opsional - uncomment jika diperlukan)
+        // IMPORT ROUTES
         Route::get('/import', [StudentController::class, 'import'])->name('import');
         Route::post('/import/process', [StudentController::class, 'processImport'])->name('import.process');
         
-        // EXPORT ROUTES (opsional)
+        // EXPORT ROUTES
         Route::get('/export/excel', [StudentController::class, 'exportExcel'])->name('export.excel');
         Route::get('/export/pdf', [StudentController::class, 'exportPdf'])->name('export.pdf');
     });
@@ -346,25 +332,17 @@ Route::prefix('attendance')->name('attendance.')->group(function () {
             ]);
         })->name('students.details');
         
-        // QR Code API
-        Route::get('/qr-codes/active', [QrCodeController::class, 'apiActive'])->name('qr-codes.active');
-        Route::get('/qr-codes/stats', [QrCodeController::class, 'apiStats'])->name('qr-codes.stats');
-        
         // Attendance API
         Route::get('/attendance/today-stats', [AttendanceController::class, 'getTodayStats'])
             ->name('attendance.today-stats');
-            
-        // Real-time attendance API
-        Route::get('/attendance/realtime/{qrCodeId}', [AttendanceController::class, 'getRealtimeData'])
-            ->name('attendance.realtime');
-            
+        
         // Scan process API
         Route::post('/attendance/scan-process', [AttendanceController::class, 'scanProcess'])
             ->name('attendance.scan-process');
     });
     
     // =================== DEBUG & UTILITY ROUTES ===================
-    Route::middleware(['auth', 'role:teacher,guru,admin'])->group(function () {
+    Route::middleware(['role:teacher,guru,admin'])->group(function () {
         Route::get('/debug/test-attendance/{code}', function($code) {
             $qrCode = \App\Models\QRCode::where('code', $code)->first();
             
@@ -383,9 +361,23 @@ Route::prefix('attendance')->name('attendance.')->group(function () {
     Route::get('/unauthorized', function () {
         return view('errors.unauthorized');
     })->name('unauthorized');
+    
+    // =================== QUICK GENERATE QR ROUTE ===================
+    Route::post('/attendance/quick-generate-qr/{classId}', [AttendanceController::class, 'quickGenerateQr'])
+        ->name('attendance.quick-generate-qr')
+        ->middleware('role:teacher,guru,admin');
 });
 
 // =================== FALLBACK ROUTE ===================
 Route::fallback(function () {
-    return view('errors.404');
+    // Cek jika request AJAX/API
+    if (request()->expectsJson() || request()->is('api/*')) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Halaman tidak ditemukan'
+        ], 404);
+    }
+    
+    // Untuk web request, tampilkan 404
+    return response()->view('errors.404', [], 404);
 });

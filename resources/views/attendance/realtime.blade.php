@@ -285,7 +285,7 @@ function updateTimeRemaining() {
 }
 
 function refreshAttendanceData() {
-    fetch(`{{ route('api.attendance.realtime', $qrCode->id) }}`)
+    fetch(`{{ route('api.attendance.teacher.realtime', $qrCode->id) }}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
