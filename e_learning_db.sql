@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 10, 2025 at 12:52 PM
+-- Generation Time: Apr 07, 2026 at 07:24 PM
 -- Server version: 8.0.30
 -- PHP Version: 8.1.10
 
@@ -114,8 +114,7 @@ CREATE TABLE `classes` (
 --
 
 INSERT INTO `classes` (`id`, `class_name`, `class_code`, `description`, `subject`, `semester`, `academic_year`, `school_year`, `is_active`, `teacher_id`, `created_at`, `updated_at`) VALUES
-(2, 'XI RPL', 'XIRPL', '', 'PKK', 'ganjil', '2024', NULL, 1, 2, '2025-12-03 04:50:30', '2025-12-06 08:34:01'),
-(3, 'XI PBS', 'XIPBS', '', 'PKK', 'ganjil', '2024', NULL, 1, 2, '2025-12-06 08:33:30', '2025-12-06 08:33:30');
+(1, 'Matematika Kelas 10', 'MATH-10-A', 'Kelas Matematika untuk Kelas 10', NULL, NULL, NULL, NULL, 1, 2, '2026-04-07 17:35:40', '2026-04-07 17:35:40');
 
 -- --------------------------------------------------------
 
@@ -128,7 +127,6 @@ CREATE TABLE `class_student` (
   `class_id` bigint UNSIGNED NOT NULL,
   `student_id` bigint UNSIGNED NOT NULL,
   `enrolled_at` timestamp NULL DEFAULT NULL,
-  `status` enum('active','inactive') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'active',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -137,9 +135,9 @@ CREATE TABLE `class_student` (
 -- Dumping data for table `class_student`
 --
 
-INSERT INTO `class_student` (`id`, `class_id`, `student_id`, `enrolled_at`, `status`, `created_at`, `updated_at`) VALUES
-(1, 2, 3, '2025-12-06 03:52:10', 'active', '2025-12-03 07:41:07', '2025-12-03 07:41:07'),
-(2, 2, 5, NULL, 'active', '2025-12-06 04:21:53', '2025-12-06 04:21:53');
+INSERT INTO `class_student` (`id`, `class_id`, `student_id`, `enrolled_at`, `created_at`, `updated_at`) VALUES
+(1, 1, 3, '2026-04-07 17:40:48', '2026-04-07 17:35:40', '2026-04-07 17:35:40'),
+(2, 1, 4, '2026-04-07 17:40:48', '2026-04-07 17:35:40', '2026-04-07 17:35:40');
 
 -- --------------------------------------------------------
 
@@ -182,24 +180,17 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (6, '2025_12_01_165349_create_classes_table', 1),
 (7, '2025_12_01_165352_create_assignments_table', 1),
 (8, '2025_12_01_165355_create_submissions_table', 1),
-(9, '2025_12_01_165358_create_attendances_table', 1),
-(10, '2025_12_01_165402_create_qr_codes_table', 1),
-(11, '2025_12_01_172415_fix_qr_codes_class_id_column', 2),
-(12, '2025_12_02_122102_create_attendances_table', 3),
-(13, '2025_12_02_122126_create_qr_codes_table', 4),
-(14, '2025_12_02_122716_create_qr_codes_table', 5),
-(15, '2025_12_02_122734_create_attendances_table', 5),
-(16, '2025_12_02_164711_create_qr_codes_table', 6),
-(17, '2025_12_03_115143_add_is_active_to_classes_table', 7),
-(18, '2025_12_03_132216_create_class_student_table', 8),
-(19, '2025_12_03_134735_create_assignment_submissions_table', 9),
-(20, '2025_12_06_105144_add_enrolled_at_to_class_student_table', 10),
-(21, '2025_12_06_112040_add_is_active_to_users_table', 11),
-(22, '2025_12_06_113810_fix_classes_table_columns', 12),
-(23, '2025_12_06_153253_add_subject_to_classes_table', 13),
-(24, '2025_12_07_195740_add_marked_by_to_attendances_table', 14),
-(25, '2025_12_07_195952_update_attendances_table_add_missing_columns', 15),
-(26, '2025_12_07_200027_check_attendance_table_columns', 16);
+(9, '2025_12_02_122734_create_attendances_table', 2),
+(10, '2025_12_02_164711_create_qr_codes_table', 2),
+(11, '2025_12_03_115143_add_is_active_to_classes_table', 2),
+(12, '2025_12_03_134735_create_assignment_submissions_table', 3),
+(13, '2025_12_06_105144_add_enrolled_at_to_class_student_table', 3),
+(14, '2025_12_06_112040_add_is_active_to_users_table', 3),
+(15, '2025_12_06_113810_fix_classes_table_columns', 3),
+(16, '2025_12_06_153253_add_subject_to_classes_table', 3),
+(17, '2025_12_07_195740_add_marked_by_to_attendances_table', 3),
+(18, '2025_12_07_195952_update_attendances_table_add_missing_columns', 3),
+(19, '2025_12_07_200027_check_attendance_table_columns', 3);
 
 -- --------------------------------------------------------
 
@@ -271,6 +262,13 @@ CREATE TABLE `qr_codes` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `qr_codes`
+--
+
+INSERT INTO `qr_codes` (`id`, `code`, `class_id`, `date`, `start_time`, `end_time`, `duration_minutes`, `location_restricted`, `latitude`, `longitude`, `radius`, `qr_code_image`, `is_active`, `scan_count`, `notes`, `created_by`, `created_at`, `updated_at`) VALUES
+(12, 'AQ7CXHNN', 1, '2026-04-08', '02:13:38', '02:43:38', 30, 0, NULL, NULL, NULL, 'qr-codes/quick-AQ7CXHNN.png', 1, 0, NULL, 2, '2026-04-07 19:13:38', '2026-04-07 19:13:39');
+
 -- --------------------------------------------------------
 
 --
@@ -320,11 +318,10 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `role`, `is_active`, `nis_nip`, `phone`, `address`, `birth_date`, `profile_image`, `remember_token`, `created_at`, `updated_at`) VALUES
-(1, 'Administrator', 'admin@elearning.com', NULL, '$2y$12$S2o1fmreF6H9nByTVTdbKeMtnsldLHcKrjzpASbtPwxSlihlNswy.', 'admin', 1, 'ADM001', NULL, NULL, NULL, NULL, NULL, '2025-12-01 10:10:44', '2025-12-01 10:10:44'),
-(2, 'Dr. Fhendy, S.Kom, PDF, DOC', 'fhendy@gmail.com', NULL, '$2y$12$LOs3xKkRbWWVAzhFAFCAs.DKL9WMnD5.MUmBZ2qkO7HcXxG6Ueqzm', 'teacher', 1, 'TCH001', '081234567890', NULL, NULL, NULL, NULL, '2025-12-01 10:10:45', '2025-12-07 15:36:39'),
-(3, 'Siswa 1', 'student1@elearning.com', NULL, '$2y$12$emZtY32tMGcthzafLIBrmunYjJhh1Oj80vRE919kYH2nutWQJMhAO', 'student', 1, 'STD001', NULL, NULL, NULL, NULL, NULL, '2025-12-01 10:10:45', '2025-12-01 10:10:45'),
-(4, 'Siswa 2', 'student2@elearning.com', NULL, '$2y$12$Jrj/SZr9Vr3m5v0UYG5Aq.6GZsolOZ/aV.MGNI7uhuRVJu6L/ycnK', 'student', 1, 'STD002', NULL, NULL, NULL, NULL, NULL, '2025-12-01 10:10:45', '2025-12-01 10:10:45'),
-(5, 'fhendy', 'fhendy@elearning.com', NULL, '$2y$12$7Z31zZPRMt7YpD0I9/DUSefo/yk.3ji8DkHS/srTGc26aJ46oXW4e', 'student', 1, '2402007', NULL, NULL, NULL, NULL, NULL, '2025-12-06 04:21:53', '2025-12-06 04:21:53');
+(1, 'Administrator', 'admin@elearning.com', NULL, '$2y$12$FeafrWuC.QqVE5ufta7OxueJvD0QVry32pu9zDaGkMjq3KzdD3Pzu', 'admin', 1, 'ADM001', NULL, NULL, NULL, NULL, NULL, '2026-04-07 17:35:39', '2026-04-07 17:35:39'),
+(2, 'Guru Contoh', 'teacher@elearning.com', NULL, '$2y$12$XEZdJZ/Id4YlqP9BWQvOv.AHH4aO/pqTYujqIXa05ScHNzntVzATS', 'teacher', 1, 'TCH001', '081234567890', NULL, NULL, NULL, NULL, '2026-04-07 17:35:39', '2026-04-07 17:35:39'),
+(3, 'Siswa 1', 'student1@elearning.com', NULL, '$2y$12$nsTRfo36X8ZLLGNyt461cOs.TU5rBxZmKvXhXhMH0fkEQ9Yw/9vry', 'student', 1, 'STD001', NULL, NULL, NULL, NULL, NULL, '2026-04-07 17:35:40', '2026-04-07 17:35:40'),
+(4, 'Siswa 2', 'student2@elearning.com', NULL, '$2y$12$pO0jlEskn3ZPoiv02pprj.y9IvYK33zW37RoiKXZp5ut79xKETT0u', 'student', 1, 'STD002', NULL, NULL, NULL, NULL, NULL, '2026-04-07 17:35:40', '2026-04-07 17:35:40');
 
 --
 -- Indexes for dumped tables
@@ -369,7 +366,7 @@ ALTER TABLE `classes`
 --
 ALTER TABLE `class_student`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `class_student_class_id_student_id_unique` (`class_id`,`student_id`),
+  ADD KEY `class_student_class_id_foreign` (`class_id`),
   ADD KEY `class_student_student_id_foreign` (`student_id`);
 
 --
@@ -438,7 +435,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `assignments`
 --
 ALTER TABLE `assignments`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `assignment_submissions`
@@ -450,13 +447,13 @@ ALTER TABLE `assignment_submissions`
 -- AUTO_INCREMENT for table `attendances`
 --
 ALTER TABLE `attendances`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `classes`
 --
 ALTER TABLE `classes`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `class_student`
@@ -474,7 +471,7 @@ ALTER TABLE `failed_jobs`
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `personal_access_tokens`
@@ -486,19 +483,19 @@ ALTER TABLE `personal_access_tokens`
 -- AUTO_INCREMENT for table `qr_codes`
 --
 ALTER TABLE `qr_codes`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `submissions`
 --
 ALTER TABLE `submissions`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- Constraints for dumped tables
