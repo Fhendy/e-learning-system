@@ -13,7 +13,7 @@
             <a href="{{ route('qr-codes.create') }}" class="btn btn-primary">
                 <i class="fas fa-plus-circle me-2"></i>Generate QR Code
             </a>
-            <a href="{{ route('attendance.export') }}" class="btn btn-success">
+            <a href="{{ route('attendance.teacher.export') }}" class="btn btn-success">
                 <i class="fas fa-download me-2"></i>Export Data
             </a>
             <button class="btn btn-info" onclick="showQuickStats()">
@@ -206,7 +206,7 @@
                     </h6>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('attendance.manual') }}" method="POST">
+                    <form action="{{ route('attendance.teacher.manual') }}" method="POST">
                         @csrf
                         <div class="mb-3">
                             <label class="form-label">Kelas</label>

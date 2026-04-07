@@ -277,7 +277,7 @@
                                     <p class="card-text">
                                         <small class="text-muted">Kode: {{ $qrCode->code }}</small>
                                     </p>
-                                    <a href="{{ route('attendance.scan', $qrCode->code) }}" 
+                                    <a href="{{ route('attendance.scan.page', $qrCode->code) }}" 
                                        class="btn btn-sm btn-success">
                                         <i class="fas fa-camera"></i> Scan QR
                                     </a>

@@ -274,11 +274,11 @@
                     </table>
                     
                     <div class="mt-3">
-                        <a href="{{ route('attendance.scan', $qrCode->code) }}" 
+                        <a href="{{ route('attendance.scan.page', $qrCode->code) }}" 
                            target="_blank" class="btn btn-outline-primary w-100 mb-2">
                             <i class="bi bi-qr-code-scan me-2"></i>Scan QR Code
                         </a>
-                        <a href="data:image/png;base64,{{ base64_encode(QrCode::size(300)->generate(route('attendance.scan', $qrCode->code))) }}" 
+                        <a href="data:image/png;base64,{{ base64_encode(QrCode::size(300)->generate(route('attendance.scan.page', $qrCode->code))) }}" 
                            download="qr-code-{{ $qrCode->code }}-new.png" 
                            class="btn btn-outline-success w-100">
                             <i class="bi bi-download me-2"></i>Download QR Code

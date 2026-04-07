@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB; 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -90,142 +90,171 @@ class QrCodeController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-public function store(Request $request)
-{
-    $user = Auth::user();
-    
-    // Check permissions
-    if (!in_array($user->role, ['teacher', 'admin', 'guru'])) {
-        abort(403, 'Akses ditolak.');
-    }
-    
-    Log::info('Starting QR Code Creation', ['user_id' => $user->id, 'role' => $user->role]);
-    
-    // ... existing validation code ...
-    
-    DB::beginTransaction();
-    
-    try {
-        // Generate unique QR code
-        $code = $this->generateUniqueCode();
+    public function store(Request $request)
+    {
+        $user = Auth::user();
         
-        Log::info('Generating QR Code', [
-            'code' => $code,
-            'class_id' => $request->class_id,
-            'user_id' => Auth::id(),
-            'date' => $request->date,
-            'start_time' => $request->start_time,
-            'end_time' => $request->end_time
-        ]);
+        // Check permissions
+        if (!in_array($user->role, ['teacher', 'admin', 'guru'])) {
+            abort(403, 'Akses ditolak.');
+        }
         
-        // ... existing time formatting and validation ...
+        Log::info('Starting QR Code Creation', ['user_id' => $user->id, 'role' => $user->role]);
         
-        // Create QR code record
-        $qrData = [
-            'code' => $code,
-            'class_id' => $request->class_id,
-            'date' => $request->date,
-            'start_time' => $startTime,
-            'end_time' => $endTime,
-            'duration_minutes' => $request->duration_minutes,
-            'location_restricted' => $request->boolean('location_restricted'),
-            'notes' => $request->notes,
-            'is_active' => true,
-            'created_by' => Auth::id(),
-            'scan_count' => 0,
+        // Validation rules
+        $rules = [
+            'class_id' => 'required|exists:classes,id',
+            'date' => 'required|date|after_or_equal:today',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i|after:start_time',
+            'duration_minutes' => 'required|integer|min:1|max:1440',
+            'location_restricted' => 'boolean',
+            'notes' => 'nullable|string|max:500',
         ];
         
-        // Add location data if restricted
+        // Conditional validation for location restriction
         if ($request->boolean('location_restricted')) {
-            $qrData['latitude'] = $request->latitude;
-            $qrData['longitude'] = $request->longitude;
-            $qrData['radius'] = $request->radius;
+            $rules['latitude'] = 'required|numeric|between:-90,90';
+            $rules['longitude'] = 'required|numeric|between:-180,180';
+            $rules['radius'] = 'required|integer|min:10|max:1000';
         }
         
-        Log::info('Creating QR Code record', $qrData);
-        $qrCode = QRCode::create($qrData);
+        $validator = Validator::make($request->all(), $rules);
         
-        // Generate QR code URL
-        $url = url('/attendance/scan-page') . '?qr_code=' . $code;
-        Log::info('QR Code URL', ['url' => $url]);
-        
-        // Generate QR code image
-        Log::info('Starting QR image generation');
-        $qrCodeImage = $this->generateQrCodeSafely($url, $code);
-        
-        if (!$qrCodeImage) {
-            throw new \Exception('QR Code image generation returned null');
+        // Additional validation for teachers
+        if (in_array($user->role, ['teacher', 'guru'])) {
+            $validator->after(function ($validator) use ($user, $request) {
+                $class = ClassModel::find($request->class_id);
+                if ($class && $class->teacher_id != $user->id) {
+                    $validator->errors()->add('class_id', 'Anda hanya dapat membuat QR Code untuk kelas Anda sendiri.');
+                }
+            });
         }
         
-        Log::info('QR image generated', ['size_bytes' => strlen($qrCodeImage)]);
-        
-        // Simpan sebagai PNG
-        $imageName = 'qr-codes/' . $code . '.png';
-        
-        // Ensure directory exists
-        $directory = 'qr-codes';
-        if (!Storage::disk('public')->exists($directory)) {
-            Log::info('Creating directory: ' . $directory);
-            Storage::disk('public')->makeDirectory($directory);
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
         }
         
-        // Save image
-        Log::info('Saving image to: ' . $imageName);
-        $saved = Storage::disk('public')->put($imageName, $qrCodeImage);
+        DB::beginTransaction();
         
-        if (!$saved) {
-            throw new \Exception('Failed to save image to storage');
-        }
-        
-        // Verify the file exists
-        $fileExists = Storage::disk('public')->exists($imageName);
-        $fileSize = Storage::disk('public')->size($imageName);
-        
-        Log::info('Image saved verification', [
-            'exists' => $fileExists,
-            'size' => $fileSize,
-            'path' => $imageName
-        ]);
-        
-        // Update with image path
-        $qrCode->update(['qr_code_image' => $imageName]);
-        
-        DB::commit();
-        
-        Log::info('QR Code Created Successfully', [
-            'qr_code_id' => $qrCode->id,
-            'image_path' => $imageName,
-            'storage_url' => Storage::url($imageName),
-            'full_path' => Storage::disk('public')->path($imageName),
-            'url' => $url
-        ]);
-        
-        // Redirect dengan data yang diperlukan untuk preview
-        return redirect()->route('qr-codes.show', $qrCode)
-            ->with('success', 'QR Code berhasil dibuat! Kode: ' . $code)
-            ->with('qr_code_image_url', Storage::url($imageName))
-            ->with('qr_code', $code)
-            ->with('debug_info', [
-                'image_path' => $imageName,
-                'file_exists' => $fileExists,
-                'file_size' => $fileSize,
-                'storage_url' => Storage::url($imageName)
+        try {
+            // Generate unique QR code
+            $code = $this->generateUniqueCode();
+            
+            Log::info('Generating QR Code', [
+                'code' => $code,
+                'class_id' => $request->class_id,
+                'user_id' => Auth::id(),
+                'date' => $request->date,
+                'start_time' => $request->start_time,
+                'end_time' => $request->end_time
             ]);
             
-    } catch (\Exception $e) {
-        DB::rollBack();
-        
-        Log::error('Error creating QR Code', [
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
-            'request' => $request->all(),
-            'code' => $code ?? 'unknown'
-        ]);
-        
-        return back()->withInput()
-            ->with('error', 'Gagal membuat QR Code: ' . $e->getMessage());
+            // Format times properly
+            $startTime = Carbon::parse($request->start_time)->format('H:i:s');
+            $endTime = Carbon::parse($request->end_time)->format('H:i:s');
+            
+            // Validate time
+            if ($endTime <= $startTime) {
+                throw new \Exception('Waktu selesai harus setelah waktu mulai.');
+            }
+            
+            // Create QR code record
+            $qrData = [
+                'code' => $code,
+                'class_id' => $request->class_id,
+                'date' => $request->date,
+                'start_time' => $startTime,
+                'end_time' => $endTime,
+                'duration_minutes' => $request->duration_minutes,
+                'location_restricted' => $request->boolean('location_restricted'),
+                'notes' => $request->notes,
+                'is_active' => true,
+                'created_by' => Auth::id(),
+                'scan_count' => 0,
+            ];
+            
+            // Add location data if restricted
+            if ($request->boolean('location_restricted')) {
+                $qrData['latitude'] = $request->latitude;
+                $qrData['longitude'] = $request->longitude;
+                $qrData['radius'] = $request->radius;
+            }
+            
+            Log::info('Creating QR Code record', $qrData);
+            $qrCode = QRCode::create($qrData);
+            
+            // Generate QR code URL
+            $url = url('/attendance/scan-page') . '?qr_code=' . $code;
+            Log::info('QR Code URL', ['url' => $url]);
+            
+            // Generate QR code image
+            Log::info('Starting QR image generation');
+            $qrCodeImage = $this->generateQrCodeImage($url, $code);
+            
+            if (!$qrCodeImage) {
+                throw new \Exception('QR Code image generation returned null');
+            }
+            
+            Log::info('QR image generated', ['size_bytes' => strlen($qrCodeImage)]);
+            
+            // Simpan sebagai PNG
+            $imageName = 'qr-codes/' . $code . '.png';
+            
+            // Ensure directory exists
+            $directory = 'qr-codes';
+            if (!Storage::disk('public')->exists($directory)) {
+                Log::info('Creating directory: ' . $directory);
+                Storage::disk('public')->makeDirectory($directory);
+            }
+            
+            // Save image
+            Log::info('Saving image to: ' . $imageName);
+            $saved = Storage::disk('public')->put($imageName, $qrCodeImage);
+            
+            if (!$saved) {
+                throw new \Exception('Failed to save image to storage');
+            }
+            
+            // Verify the file exists
+            $fileExists = Storage::disk('public')->exists($imageName);
+            $fileSize = Storage::disk('public')->size($imageName);
+            
+            Log::info('Image saved verification', [
+                'exists' => $fileExists,
+                'size' => $fileSize,
+                'path' => $imageName
+            ]);
+            
+            // Update with image path
+            $qrCode->update(['qr_code_image' => $imageName]);
+            
+            DB::commit();
+            
+            Log::info('QR Code Created Successfully', [
+                'qr_code_id' => $qrCode->id,
+                'image_path' => $imageName,
+                'storage_url' => Storage::url($imageName),
+                'url' => $url
+            ]);
+            
+            return redirect()->route('qr-codes.show', $qrCode)
+                ->with('success', 'QR Code berhasil dibuat! Kode: ' . $code);
+                
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Error creating QR Code', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->all(),
+                'code' => $code ?? 'unknown'
+            ]);
+            
+            return back()->withInput()
+                ->with('error', 'Gagal membuat QR Code: ' . $e->getMessage());
+        }
     }
-}
 
     /**
      * Generate unique QR code
@@ -261,8 +290,169 @@ public function store(Request $request)
     }
 
     /**
-     * Generate QR code safely without Imagick dependency
+     * Generate QR code image - SIMPLIFIED VERSION
      */
+    private function generateQrCodeImage($url, $code = null)
+    {
+        try {
+            // Method 1: Google Charts API (paling reliable)
+            return $this->generateWithGoogleCharts($url);
+        } catch (\Exception $e) {
+            Log::warning('Google Charts failed: ' . $e->getMessage());
+            
+            try {
+                // Method 2: Create with GD Library
+                return $this->generateWithGd($url, $code);
+            } catch (\Exception $e2) {
+                Log::warning('GD Library failed: ' . $e2->getMessage());
+                
+                // Method 3: Simple fallback
+                return $this->generateSimpleImage($url, $code);
+            }
+        }
+    }
+
+    /**
+     * Generate with Google Charts API
+     */
+    private function generateWithGoogleCharts($url)
+    {
+        $googleChartsUrl = 'https://chart.googleapis.com/chart?' . http_build_query([
+            'chs' => '300x300',
+            'cht' => 'qr',
+            'chl' => urlencode($url),
+            'choe' => 'UTF-8',
+            'chld' => 'H|2',
+        ]);
+        
+        $context = stream_context_create([
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+            ],
+            'http' => [
+                'timeout' => 10,
+                'ignore_errors' => true,
+                'header' => "User-Agent: Mozilla/5.0\r\n"
+            ]
+        ]);
+        
+        $imageData = @file_get_contents($googleChartsUrl, false, $context);
+        
+        if ($imageData === false) {
+            throw new \Exception('Failed to fetch QR code from Google Charts');
+        }
+        
+        if (strlen($imageData) < 100) {
+            throw new \Exception('Image data too small');
+        }
+        
+        return $imageData;
+    }
+
+    /**
+     * Generate with GD Library
+     */
+    private function generateWithGd($url, $code = null)
+    {
+        if (!function_exists('gd_info')) {
+            throw new \Exception('GD Library not available');
+        }
+        
+        $size = 300;
+        $image = imagecreatetruecolor($size, $size);
+        
+        if (!$image) {
+            throw new \Exception('Failed to create image with GD');
+        }
+        
+        // Colors
+        $white = imagecolorallocate($image, 255, 255, 255);
+        $black = imagecolorallocate($image, 0, 0, 0);
+        $gray = imagecolorallocate($image, 200, 200, 200);
+        
+        // Fill background
+        imagefilledrectangle($image, 0, 0, $size, $size, $white);
+        
+        // Add decorative border
+        imagerectangle($image, 10, 10, $size-10, $size-10, $gray);
+        imagerectangle($image, 8, 8, $size-8, $size-8, $black);
+        
+        // Add text
+        $font = 4; // Built-in font
+        
+        // Title
+        $title = "QR CODE ABSENSI";
+        $titleWidth = imagefontwidth($font) * strlen($title);
+        $titleX = ($size - $titleWidth) / 2;
+        imagestring($image, $font, $titleX, 50, $title, $black);
+        
+        // Code
+        $displayCode = $code ?: substr($url, -8);
+        $codeText = "Kode: " . $displayCode;
+        $codeWidth = imagefontwidth($font) * strlen($codeText);
+        $codeX = ($size - $codeWidth) / 2;
+        imagestring($image, $font, $codeX, 100, $codeText, $black);
+        
+        // Instructions
+        $instruction = "Scan untuk absensi";
+        $instWidth = imagefontwidth($font) * strlen($instruction);
+        $instX = ($size - $instWidth) / 2;
+        imagestring($image, $font, $instX, 150, $instruction, $black);
+        
+        // URL (shortened)
+        $shortUrl = parse_url($url, PHP_URL_PATH) . '?' . parse_url($url, PHP_URL_QUERY);
+        $urlText = substr($shortUrl, 0, 30);
+        $urlWidth = imagefontwidth($font) * strlen($urlText);
+        $urlX = ($size - $urlWidth) / 2;
+        imagestring($image, $font, $urlX, 200, $urlText, $black);
+        
+        // Output sebagai PNG
+        ob_start();
+        imagepng($image);
+        $imageData = ob_get_clean();
+        imagedestroy($image);
+        
+        return $imageData;
+    }
+
+    /**
+     * Generate simple image
+     */
+    private function generateSimpleImage($url, $code = null)
+    {
+        $size = 300;
+        $image = imagecreatetruecolor($size, $size);
+        $white = imagecolorallocate($image, 255, 255, 255);
+        $black = imagecolorallocate($image, 0, 0, 0);
+        
+        imagefilledrectangle($image, 0, 0, $size, $size, $white);
+        
+        // Add border
+        imagerectangle($image, 5, 5, $size-5, $size-5, $black);
+        
+        // Add text
+        $text = "SCAN UNTUK\nABSENSI\n\nKode: " . ($code ?: 'N/A');
+        $lines = explode("\n", $text);
+        
+        $font = 5;
+        $lineHeight = 25;
+        $startY = ($size - (count($lines) * $lineHeight)) / 2;
+        
+        foreach ($lines as $i => $line) {
+            $textWidth = imagefontwidth($font) * strlen($line);
+            $x = ($size - $textWidth) / 2;
+            $y = $startY + ($i * $lineHeight);
+            imagestring($image, $font, $x, $y, $line, $black);
+        }
+        
+        ob_start();
+        imagepng($image);
+        $data = ob_get_clean();
+        imagedestroy($image);
+        
+        return $data;
+    }
 private function generateQrCodeSafely($url, $code = null)
 {
     Log::info('QR Generation Started', ['url' => substr($url, 0, 100), 'code' => $code]);
@@ -599,90 +789,78 @@ private function methodGoogleChartsApi($url, $code = null)
     /**
      * Display the specified resource.
      */
-  public function show(QRCode $qrCode)
-{
-    $user = Auth::user();
-    
-    // Check permissions
-    if ($user->role === 'student') {
-        abort(403, 'Akses ditolak.');
-    }
-    
-    if (in_array($user->role, ['teacher', 'guru']) && $qrCode->class->teacher_id !== $user->id) {
-        abort(403, 'Akses ditolak. Ini bukan kelas Anda.');
-    }
-    
-    // Log untuk debugging
-    Log::info('Showing QR Code', [
-        'qr_code_id' => $qrCode->id,
-        'code' => $qrCode->code,
-        'image_path' => $qrCode->qr_code_image,
-        'user_id' => $user->id
-    ]);
-    
-    // Check if image exists
-    $imageExists = false;
-    $imageUrl = null;
-    $imagePath = null;
-    
-    if ($qrCode->qr_code_image) {
-        $imageExists = Storage::disk('public')->exists($qrCode->qr_code_image);
-        $imageUrl = Storage::url($qrCode->qr_code_image);
-        $imagePath = Storage::disk('public')->path($qrCode->qr_code_image);
+    public function show(QRCode $qrCode)
+    {
+        $user = Auth::user();
         
-        Log::info('QR Image Check', [
-            'exists' => $imageExists,
-            'url' => $imageUrl,
-            'path' => $imagePath,
-            'full_path' => $imagePath
+        // Check permissions
+        if ($user->role === 'student') {
+            abort(403, 'Akses ditolak.');
+        }
+        
+        if (in_array($user->role, ['teacher', 'guru']) && $qrCode->class->teacher_id !== $user->id) {
+            abort(403, 'Akses ditolak. Ini bukan kelas Anda.');
+        }
+        
+        // Log untuk debugging
+        Log::info('Showing QR Code', [
+            'qr_code_id' => $qrCode->id,
+            'code' => $qrCode->code,
+            'image_path' => $qrCode->qr_code_image,
+            'user_id' => $user->id
         ]);
+        
+        // Check if image exists
+        $imageExists = false;
+        $imageUrl = null;
+        
+        if ($qrCode->qr_code_image) {
+            $imageExists = Storage::disk('public')->exists($qrCode->qr_code_image);
+            $imageUrl = Storage::url($qrCode->qr_code_image);
+        }
+        
+        $qrCode->load(['class', 'class.teacher', 'attendances', 'attendances.student']);
+        
+        // Get attendance statistics
+        $attendanceStats = $qrCode->attendances()
+            ->selectRaw('status, count(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->toArray();
+        
+        // Get paginated attendances
+        $attendances = $qrCode->attendances()
+            ->with('student')
+            ->latest()
+            ->paginate(15);
+        
+        // Get total students in class
+        $totalStudents = $qrCode->class->students()->count();
+        
+        // Calculate attendance statistics
+        $attendedCount = ($attendanceStats['present'] ?? 0) + ($attendanceStats['late'] ?? 0);
+        $attendancePercentage = $totalStudents > 0 ? round(($attendedCount / $totalStudents) * 100, 1) : 0;
+        
+        // Calculate total scans
+        $totalScans = $qrCode->attendances()->count();
+        
+        // Get QR code validity status
+        $isExpired = now() > Carbon::parse($qrCode->date . ' ' . $qrCode->end_time);
+        $isActive = $qrCode->is_active && !$isExpired;
+        
+        return view('qr-codes.show', compact(
+            'qrCode', 
+            'attendanceStats', 
+            'attendances',
+            'totalStudents',
+            'attendancePercentage',
+            'totalScans',
+            'isExpired',
+            'isActive',
+            'imageExists',
+            'imageUrl'
+        ));
     }
-    
-    $qrCode->load(['class', 'class.teacher', 'attendances', 'attendances.student']);
-    
-    // Get attendance statistics
-    $attendanceStats = $qrCode->attendances()
-        ->selectRaw('status, count(*) as count')
-        ->groupBy('status')
-        ->pluck('count', 'status')
-        ->toArray();
-    
-    // Get paginated attendances
-    $attendances = $qrCode->attendances()
-        ->with('student')
-        ->latest()
-        ->paginate(15);
-    
-    // Get total students in class
-    $totalStudents = $qrCode->class->students()->count();
-    
-    // Calculate attendance statistics
-    $attendedCount = ($attendanceStats['present'] ?? 0) + ($attendanceStats['late'] ?? 0);
-    $attendancePercentage = $totalStudents > 0 ? round(($attendedCount / $totalStudents) * 100, 1) : 0;
-    
-    // Calculate total scans
-    $totalScans = $qrCode->attendances()->count();
-    
-    // Get QR code validity status
-    $isExpired = $qrCode->is_expired;
-    $isActive = $qrCode->is_active_now;
-    $isFuture = now() < $qrCode->full_start_datetime;
-    
-    return view('qr-codes.show', compact(
-        'qrCode', 
-        'attendanceStats', 
-        'attendances',
-        'totalStudents',
-        'attendancePercentage',
-        'totalScans',
-        'isExpired',
-        'isActive',
-        'isFuture',
-        'imageExists',
-        'imageUrl',
-        'imagePath'
-    ));
-}
 
     /**
      * Show the form for editing the specified resource.
@@ -1191,127 +1369,124 @@ private function methodGoogleChartsApi($url, $code = null)
         return $colors[abs($hash) % count($colors)];
     }
 
-    /**
-     * Generate QR Code untuk absensi semua siswa di kelas (Single QR Code)
-     */
-    public function generateForClass(Request $request)
-    {
-        $user = Auth::user();
-        
-        if (!in_array($user->role, ['teacher', 'admin', 'guru'])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Akses ditolak.'
-            ], 403);
-        }
+public function generateForClass(Request $request)
+{
+    $user = Auth::user();
+    
+    if (!in_array($user->role, ['teacher', 'admin', 'guru'])) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Akses ditolak.'
+        ], 403);
+    }
 
-        $validator = Validator::make($request->all(), [
-            'class_id' => 'required|exists:classes,id',
-            'date' => 'required|date|after_or_equal:today',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
-            'duration_minutes' => 'required|integer|min:5|max:240',
-            'notes' => 'nullable|string|max:500',
+    $validator = Validator::make($request->all(), [
+        'class_id' => 'required|exists:classes,id',
+        'date' => 'required|date|after_or_equal:today',
+        'start_time' => 'required|date_format:H:i',
+        'end_time' => 'required|date_format:H:i|after:start_time',
+        'duration_minutes' => 'required|integer|min:5|max:240',
+        'notes' => 'nullable|string|max:500',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'errors' => $validator->errors()
+        ], 422);
+    }
+
+    // Check if teacher owns the class
+    $class = ClassModel::find($request->class_id);
+    if ($class->teacher_id !== $user->id && $user->role !== 'admin') {
+        return response()->json([
+            'success' => false,
+            'message' => 'Anda tidak mengajar kelas ini'
+        ], 403);
+    }
+
+    DB::beginTransaction();
+
+    try {
+        // Generate unique code untuk kelas
+        $classCode = strtoupper(substr(preg_replace('/[^A-Z]/', '', $class->class_name), 0, 3));
+        $dateCode = now()->format('Ymd');
+        
+        do {
+            $randomCode = Str::random(4);
+            $code = $classCode . '-' . $dateCode . '-' . strtoupper($randomCode);
+            
+            $exists = QRCode::where('code', $code)->exists();
+        } while ($exists);
+        
+        // Format times dengan benar
+        $startTime = Carbon::createFromFormat('H:i', $request->start_time)->format('H:i:s');
+        $endTime = Carbon::createFromFormat('H:i', $request->end_time)->format('H:i:s');
+        
+        // Create QR code
+        $qrCode = QRCode::create([
+            'code' => $code,
+            'class_id' => $class->id,
+            'date' => $request->date,
+            'start_time' => $startTime,
+            'end_time' => $endTime,
+            'duration_minutes' => $request->duration_minutes,
+            'notes' => $request->notes,
+            'is_active' => true,
+            'created_by' => $user->id,
+            'scan_count' => 0,
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
+        // Generate QR code URL
+        $url = url('/attendance/scan-page') . '?qr_code=' . $code;
+        
+        // Generate QR code image
+        $qrCodeImage = $this->generateQrCodeImage($url, $code);
+
+        // Save image
+        $imageName = 'qr-codes/class-' . $code . '.png';
+        
+        // Ensure directory exists
+        if (!Storage::disk('public')->exists('qr-codes')) {
+            Storage::disk('public')->makeDirectory('qr-codes');
         }
+        
+        Storage::disk('public')->put($imageName, $qrCodeImage);
+        
+        $qrCode->update(['qr_code_image' => $imageName]);
 
-        // Check if teacher owns the class
-        $class = ClassModel::find($request->class_id);
-        if ($class->teacher_id !== $user->id && $user->role !== 'admin') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda tidak mengajar kelas ini'
-            ], 403);
-        }
+        DB::commit();
 
-        DB::beginTransaction();
-
-        try {
-            // Generate unique code untuk kelas
-            $classCode = strtoupper(substr(preg_replace('/[^A-Z]/', '', $class->class_name), 0, 3));
-            $dateCode = now()->format('Ymd');
-            
-            do {
-                $randomCode = Str::random(4);
-                $code = $classCode . '-' . $dateCode . '-' . strtoupper($randomCode);
-                
-                $exists = QRCode::where('code', $code)->exists();
-            } while ($exists);
-            
-            // Format times
-            $startTime = Carbon::parse($request->start_time)->format('H:i:s');
-            $endTime = Carbon::parse($request->end_time)->format('H:i:s');
-            
-            // Create QR code
-            $qrCode = QRCode::create([
+        return response()->json([
+            'success' => true,
+            'message' => 'QR Code berhasil dibuat untuk semua siswa di kelas',
+            'data' => [
+                'qr_code_id' => $qrCode->id,
                 'code' => $code,
-                'class_id' => $class->id,
-                'date' => $request->date,
-                'start_time' => $startTime,
-                'end_time' => $endTime,
-                'duration_minutes' => $request->duration_minutes,
-                'notes' => $request->notes,
-                'is_active' => true,
-                'created_by' => $user->id,
-                'scan_count' => 0,
-            ]);
+                'qr_image_url' => Storage::url($imageName),
+                'class_name' => $class->class_name,
+                'date' => Carbon::parse($qrCode->date)->format('d F Y'),
+                'time_range' => $qrCode->formatted_time_range,
+                'duration' => $qrCode->duration_minutes . ' menit',
+                'realtime_url' => route('attendance.realtime', $qrCode->id),
+                'total_students' => $class->students()->count(),
+            ]
+        ]);
 
-            // Generate QR code URL
-            $url = url('/attendance/scan-page') . '?qr_code=' . $code;
-            
-            // Generate QR code image
-            $qrCodeImage = $this->generateQrCodeSafely($url, $code);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Error generating QR code for class', [
+            'error' => $e->getMessage(),
+            'class_id' => $request->class_id,
+            'user_id' => $user->id
+        ]);
 
-            // Save image
-            $imageName = 'qr-codes/class-' . $code . '.png';
-            
-            // Ensure directory exists
-            if (!Storage::disk('public')->exists('qr-codes')) {
-                Storage::disk('public')->makeDirectory('qr-codes');
-            }
-            
-            Storage::disk('public')->put($imageName, $qrCodeImage);
-            
-            $qrCode->update(['qr_code_image' => $imageName]);
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'QR Code berhasil dibuat untuk semua siswa di kelas',
-                'data' => [
-                    'qr_code_id' => $qrCode->id,
-                    'code' => $code,
-                    'qr_image_url' => Storage::url($imageName),
-                    'class_name' => $class->class_name,
-                    'date' => $qrCode->date->format('d F Y'),
-                    'time_range' => $qrCode->formatted_time_range,
-                    'duration' => $qrCode->duration_minutes . ' menit',
-                    'realtime_url' => route('attendance.realtime', $qrCode->id),
-                    'total_students' => $class->students()->count(),
-                ]
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error generating QR code for class', [
-                'error' => $e->getMessage(),
-                'class_id' => $request->class_id,
-                'user_id' => $user->id
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal membuat QR Code: ' . $e->getMessage()
-            ], 500);
-        }
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal membuat QR Code: ' . $e->getMessage()
+        ], 500);
     }
+}
 
     /**
      * Quick generate QR Code untuk kelas hari ini (30 menit)

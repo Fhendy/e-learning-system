@@ -1,3 +1,4 @@
+{{-- resources/views/attendance/student-scan.blade.php --}}
 @extends('layouts.app')
 
 @section('title', 'Scan QR Code Absensi')
@@ -18,6 +19,14 @@
                         Arahkan kamera ke QR Code yang ditampilkan guru untuk melakukan absensi.
                     </div>
                     
+                    @if($todayAttendance)
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Anda sudah melakukan absensi hari ini ({{ $todayAttendance->status_text ?? 'Hadir' }}) pada 
+                        {{ $todayAttendance->checked_in_at ? Carbon\Carbon::parse($todayAttendance->checked_in_at)->format('H:i') : '-' }}
+                    </div>
+                    @endif
+                    
                     <!-- QR Code Scanner Container -->
                     <div class="qr-scanner-container text-center mb-4">
                         <div id="qr-reader" style="width: 100%; min-height: 300px;"></div>
@@ -31,35 +40,21 @@
                             </button>
                         </div>
                     </div>
-                    {{-- resources/views/attendance/student-scan.blade.php --}}
 
-@if($specificQrCode)
-<div class="alert alert-success">
-    <h5><i class="fas fa-qrcode me-2"></i>QR Code Ditemukan!</h5>
-    <p class="mb-1">Kelas: <strong>{{ $specificQrCode->class->class_name }}</strong></p>
-    <p class="mb-1">Waktu: <strong>{{ $specificQrCode->formatted_time_range }}</strong></p>
-    <p class="mb-0">Kode: <code>{{ $specificQrCode->code }}</code></p>
-    <div class="mt-2">
-        <button class="btn btn-success" onclick="processSpecificQrCode('{{ $specificQrCode->code }}')">
-            <i class="fas fa-check-circle me-2"></i>Absen Sekarang
-        </button>
-    </div>
-</div>
-@endif
+                    @if($specificQrCode && !$todayAttendance)
+                    <div class="alert alert-success">
+                        <h5><i class="fas fa-qrcode me-2"></i>QR Code Ditemukan!</h5>
+                        <p class="mb-1">Kelas: <strong>{{ $specificQrCode->class->class_name ?? 'N/A' }}</strong></p>
+                        <p class="mb-1">Waktu: <strong>{{ $specificQrCode->start_time ?? 'N/A' }} - {{ $specificQrCode->end_time ?? 'N/A' }}</strong></p>
+                        <p class="mb-0">Kode: <code>{{ $specificQrCode->code ?? 'N/A' }}</code></p>
+                        <div class="mt-2">
+                            <button class="btn btn-success" onclick="processSpecificQrCode('{{ $specificQrCode->code ?? '' }}')">
+                                <i class="fas fa-check-circle me-2"></i>Absen Sekarang
+                            </button>
+                        </div>
+                    </div>
+                    @endif
 
-<script>
-function processSpecificQrCode(code) {
-    showAlert('info', 'Memproses QR Code...');
-    processQrCode(code);
-}
-
-// Jika ada QR code parameter di URL, auto process
-@if($specificQrCode && !$todayAttendance)
-    setTimeout(() => {
-        processSpecificQrCode('{{ $specificQrCode->code }}');
-    }, 1000);
-@endif
-</script>
                     <!-- Manual Input -->
                     <div class="manual-input card mt-4">
                         <div class="card-body">
@@ -69,7 +64,7 @@ function processSpecificQrCode(code) {
                             <p class="text-muted small mb-3">
                                 Jika QR Code tidak dapat discan, masukkan kode secara manual
                             </p>
-                            <form id="manual-form" class="row g-3">
+                            <form id="manual-form" class="row g-3" action="{{ route('attendance.scan.process') }}">
                                 @csrf
                                 <div class="col-md-8">
                                     <input type="text" name="qr_code" 
@@ -87,7 +82,7 @@ function processSpecificQrCode(code) {
                     </div>
                     
                     <!-- Active QR Codes -->
-                    @if(isset($activeQrCodes) && $activeQrCodes->count() > 0)
+                    @if($activeQrCodes && $activeQrCodes->count() > 0)
                     <div class="active-qr-codes card mt-4">
                         <div class="card-body">
                             <h6 class="card-title">
@@ -101,16 +96,14 @@ function processSpecificQrCode(code) {
                                             <h6 class="mb-1">{{ $qrCode->class->class_name ?? 'N/A' }}</h6>
                                             <small class="text-muted">
                                                 <i class="fas fa-clock me-1"></i>
-                                                {{ $qrCode->formatted_time_range ?? 'N/A' }}
+                                                {{ $qrCode->start_time ?? 'N/A' }} - {{ $qrCode->end_time ?? 'N/A' }}
                                             </small>
                                         </div>
                                         <div>
                                             @if($qrCode->location_restricted)
                                             <span class="badge bg-warning">Lokasi Terbatas</span>
                                             @endif
-                                            <span class="badge bg-{{ $qrCode->status_color ?? 'info' }} ms-1">
-                                                {{ $qrCode->status_text ?? 'Aktif' }}
-                                            </span>
+                                            <span class="badge bg-success ms-1">Aktif</span>
                                         </div>
                                     </div>
                                 </div>
@@ -243,13 +236,25 @@ function onScanSuccess(decodedText, decodedResult) {
 }
 
 function onScanFailure(error) {
-    // Handle scan failure (biasanya terjadi terus menerus)
+    // Handle scan failure
     // console.warn(`QR scan failed: ${error}`);
 }
 
+function processSpecificQrCode(code) {
+    showAlert('info', 'Memproses QR Code...');
+    processQrCode(code);
+}
+
+// Jika ada QR code parameter di URL, auto process
+@if($specificQrCode && !$todayAttendance)
+    setTimeout(() => {
+        processSpecificQrCode('{{ $specificQrCode->code }}');
+    }, 1000);
+@endif
+
 function processQrCode(code) {
     // Kirim QR code ke server untuk validasi dan absensi
-    fetch('{{ route("attendance.scan-process") }}', {
+    fetch('{{ route("api.attendance.scan-process") }}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -279,49 +284,6 @@ function processQrCode(code) {
     .catch(error => {
         console.error('Error:', error);
         showAlert('danger', 'Terjadi kesalahan saat memproses QR Code.');
-    });
-}
-
-function submitAttendance(code, latitude, longitude) {
-    // Submit via AJAX
-    fetch(`{{ route('attendance.scan', ['code' => '__CODE__']) }}`.replace('__CODE__', code), {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({
-            latitude: latitude,
-            longitude: longitude
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('success', data.message);
-            
-            // Redirect to confirmation or dashboard
-            if (data.redirect_url) {
-                setTimeout(() => {
-                    window.location.href = data.redirect_url;
-                }, 2000);
-            } else {
-                setTimeout(() => {
-                    window.location.href = '{{ route("attendance.student.index") }}';
-                }, 2000);
-            }
-        } else {
-            showAlert('danger', data.message);
-            
-            // If requires manual input or other handling
-            if (data.requires_location) {
-                showAlert('warning', 'Silakan izinkan akses lokasi dan coba lagi.');
-            }
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showAlert('danger', 'Terjadi kesalahan saat memproses absensi.');
     });
 }
 

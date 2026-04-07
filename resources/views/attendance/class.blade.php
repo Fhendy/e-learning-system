@@ -13,7 +13,7 @@
             <a href="{{ route('classes.show', $class) }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left me-2"></i>Kembali ke Kelas
             </a>
-            <a href="{{ route('attendance.export', $class) }}" class="btn btn-info">
+            <a href="{{ route('attendance.teacher.export', $class) }}" class="btn btn-info">
                 <i class="fas fa-download me-2"></i>Export Data
             </a>
         </div>
