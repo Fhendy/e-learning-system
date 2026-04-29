@@ -5,7 +5,7 @@
                 <h5 class="modal-title">Perpanjang Batas Waktu</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ route('assignments.extend', $assignment) }}" method="POST">
+            <form action="{{ route('assignments.teacher.extend', $assignment) }}" method="POST">
                 @csrf
                 <div class="modal-body">
                     <div class="mb-3">

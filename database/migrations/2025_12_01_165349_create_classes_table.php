@@ -15,6 +15,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->foreignId('teacher_id')->constrained('users');
             $table->timestamps();
+            
         });
 
         Schema::create('class_student', function (Blueprint $table) {
@@ -30,4 +31,5 @@ return new class extends Migration
         Schema::dropIfExists('class_student');
         Schema::dropIfExists('classes');
     }
+    
 };

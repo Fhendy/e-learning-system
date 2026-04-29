@@ -2,28 +2,13 @@
 
 @section('title', 'Dashboard Guru')
 
-@section('breadcrumb')
-<nav class="breadcrumb-nav">
-    <div class="container">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">
-                <a href="{{ route('dashboard.teacher') }}" class="breadcrumb-link">
-                    <i class="bi bi-house-door"></i>
-                    <span>Dashboard Guru</span>
-                </a>
-            </li>
-        </ol>
-    </div>
-</nav>
-@endsection
-
 @section('content')
-<div class="dashboard-container">
+<div class="container-fluid px-3 px-md-4">
     <!-- Welcome Section -->
-    <div class="welcome-card">
+    <div class="welcome-card mb-4">
         <div class="welcome-content">
             <div class="welcome-text">
-                <h1 class="welcome-title">Selamat Datang, {{ auth()->user()->name }}! 👋</h1>
+                <h1 class="welcome-title">Selamat Datang, {{ auth()->user()->name }}</h1>
                 <p class="welcome-date">
                     <i class="bi bi-calendar-check"></i>
                     {{ now()->translatedFormat('l, d F Y') }}
@@ -43,177 +28,116 @@
     </div>
 
     <!-- Stats Grid -->
-    <div class="stats-grid">
-        <div class="stat-card stat-primary">
-            <div class="stat-icon">
-                <i class="bi bi-people-fill"></i>
+    <div class="row g-2 g-md-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stats-icon bg-primary-light text-primary">
+                        <i class="bi bi-people-fill fs-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="stats-value mb-0">{{ $classes->count() ?? 0 }}</h3>
+                        <p class="stats-label mb-0">Total Kelas</p>
+                    </div>
+                </div>
+                <a href="{{ route('classes.index') }}" class="stats-link">
+                    <i class="bi bi-arrow-right"></i>
+                </a>
             </div>
-            <div class="stat-content">
-                <div class="stat-number">{{ $classes->count() }}</div>
-                <div class="stat-title">Total Kelas</div>
-                <div class="stat-subtitle">Anda mengajar</div>
-            </div>
-            <a href="{{ route('classes.index') }}" class="stat-link">
-                <i class="bi bi-arrow-right"></i>
-            </a>
         </div>
-
-        <div class="stat-card stat-success">
-            <div class="stat-icon">
-                <i class="bi bi-person-badge"></i>
+        <div class="col-6 col-md-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stats-icon bg-success-light text-success">
+                        <i class="bi bi-person-badge fs-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="stats-value mb-0">{{ $totalStudents ?? 0 }}</h3>
+                        <p class="stats-label mb-0">Total Siswa</p>
+                    </div>
+                </div>
+                <a href="{{ route('students.index') }}" class="stats-link">
+                    <i class="bi bi-arrow-right"></i>
+                </a>
             </div>
-            <div class="stat-content">
-                <div class="stat-number">{{ $totalStudents }}</div>
-                <div class="stat-title">Total Siswa</div>
-                <div class="stat-subtitle">Di semua kelas</div>
-            </div>
-            <a href="{{ route('students.index') }}" class="stat-link">
-                <i class="bi bi-arrow-right"></i>
-            </a>
         </div>
-
-        <div class="stat-card stat-info">
-            <div class="stat-icon">
-                <i class="bi bi-journal-text"></i>
+        <div class="col-6 col-md-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stats-icon bg-info-light text-info">
+                        <i class="bi bi-journal-text fs-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="stats-value mb-0">{{ $activeAssignments ?? 0 }}</h3>
+                        <p class="stats-label mb-0">Tugas Aktif</p>
+                    </div>
+                </div>
+                <a href="{{ route('assignments.teacher.index') }}" class="stats-link">
+                    <i class="bi bi-arrow-right"></i>
+                </a>
             </div>
-            <div class="stat-content">
-                <div class="stat-number">{{ $activeAssignments }}</div>
-                <div class="stat-title">Tugas Aktif</div>
-                <div class="stat-subtitle">{{ $pendingSubmissions }} belum dinilai</div>
-            </div>
-            <a href="{{ route('assignments.teacher.index') }}" class="stat-link">
-                <i class="bi bi-arrow-right"></i>
-            </a>
         </div>
-
-        <div class="stat-card stat-warning">
-            <div class="stat-icon">
-                <i class="bi bi-qr-code-scan"></i>
+        <div class="col-6 col-md-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stats-icon bg-warning-light text-warning">
+                        <i class="bi bi-qr-code-scan fs-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="stats-value mb-0">{{ $activeQrCodes ?? 0 }}</h3>
+                        <p class="stats-label mb-0">QR Code Aktif</p>
+                    </div>
+                </div>
+                <a href="{{ route('qr-codes.dashboard') }}" class="stats-link">
+                    <i class="bi bi-arrow-right"></i>
+                </a>
             </div>
-            <div class="stat-content">
-                <div class="stat-number">{{ $activeQrCodes }}</div>
-                <div class="stat-title">QR Code Aktif</div>
-                <div class="stat-subtitle">Hari ini</div>
-            </div>
-            <a href="{{ route('qr-codes.dashboard') }}" class="stat-link">
-                <i class="bi bi-arrow-right"></i>
-            </a>
         </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="dashboard-content">
-        <!-- Chart Section -->
-        <div class="chart-section">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="bi bi-bar-chart"></i>
-                        Statistik Absensi 7 Hari Terakhir
-                    </h3>
-                    <div class="period-selector">
-                        <button class="period-btn active">7 Hari</button>
-                        <button class="period-btn">30 Hari</button>
-                        <button class="period-btn">Semester</button>
+    <!-- Two Column Layout -->
+    <div class="row g-3 g-md-4">
+        <!-- Left Column -->
+        <div class="col-xl-8 col-lg-7">
+            <!-- Chart Section -->
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-bar-chart me-2"></i>
+                            Statistik Absensi (7 Hari Terakhir)
+                        </h5>
+                        <button class="btn btn-sm btn-outline-primary" onclick="refreshChart()">
+                            <i class="bi bi-arrow-repeat"></i> Refresh
+                        </button>
                     </div>
                 </div>
                 <div class="card-body">
                     <div class="chart-container">
                         <canvas id="attendanceChart"></canvas>
                     </div>
+                    <div id="chartEmptyMessage" class="alert alert-info text-center mt-3" style="display: none;">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Belum ada data absensi untuk 7 hari terakhir. Silakan buat QR Code dan lakukan absensi terlebih dahulu.
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Today's Classes -->
-        <div class="today-classes-section">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="bi bi-calendar-day"></i>
-                        Kelas Hari Ini
-                    </h3>
+            <!-- Recent Assignments -->
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-journal-text me-2"></i>
+                            Tugas Terbaru
+                        </h5>
+                        <a href="{{ route('assignments.teacher.index') }}" class="btn btn-link btn-sm">
+                            Lihat Semua <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
-                    @if($todayClasses->count() > 0)
-                        <div class="classes-list">
-                            @foreach($todayClasses as $class)
-                            <div class="class-item">
-                                <div class="class-icon">
-                                    <i class="bi bi-mortarboard-fill"></i>
-                                </div>
-                                <div class="class-info">
-                                    <h4>{{ $class->class_name }}</h4>
-                                    <div class="class-details">
-                                        <span class="badge">{{ $class->class_code }}</span>
-                                        <span class="students">
-                                            <i class="bi bi-people"></i>
-                                            {{ $class->students->count() }} siswa
-                                        </span>
-                                    </div>
-                                    @php
-                                        $qrCode = $class->active_qr_code ?? $class->qrCodes()->whereDate('date', today())->first();
-                                    @endphp
-                                    <div class="class-schedule">
-                                        @if($qrCode)
-                                            <span class="time">
-                                                <i class="bi bi-clock"></i>
-                                                {{ $qrCode->formatted_start_time }}
-                                            </span>
-                                            @if($qrCode->is_active)
-                                                <span class="status active">Aktif</span>
-                                            @endif
-                                        @else
-                                            <span class="time muted">
-                                                <i class="bi bi-clock"></i>
-                                                Belum ada jadwal
-                                            </span>
-                                        @endif
-                                    </div>
-                                </div>
-                                <div class="class-actions">
-                                    @if($qrCode && $qrCode->is_active)
-                                        <a href="{{ route('qr-codes.show', $qrCode) }}" class="btn btn-sm btn-success">
-                                            <i class="bi bi-qr-code-scan"></i>
-                                        </a>
-                                    @else
-                                        <a href="{{ route('qr-codes.create') }}" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-plus"></i>
-                                        </a>
-                                    @endif
-                                </div>
-                            </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="empty-state">
-                            <div class="empty-icon">
-                                <i class="bi bi-calendar-x"></i>
-                            </div>
-                            <h4>Tidak ada kelas hari ini</h4>
-                            <p>Anda bisa membuat QR code untuk kelas lain</p>
-                            <a href="{{ route('qr-codes.create') }}" class="btn btn-primary btn-sm">
-                                <i class="bi bi-qr-code-scan"></i>
-                                Buat QR Code
-                            </a>
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-
-        <!-- Recent Assignments -->
-        <div class="recent-assignments-section">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="bi bi-journal-text"></i>
-                        Tugas Terbaru
-                    </h3>
-                    <a href="{{ route('assignments.teacher.index') }}" class="btn btn-link btn-sm">Lihat Semua</a>
-                </div>
-                <div class="card-body">
-                    @if($recentAssignments->count() > 0)
+                    @if(isset($recentAssignments) && $recentAssignments->count() > 0)
                         <div class="assignments-list">
                             @foreach($recentAssignments as $assignment)
                             <div class="assignment-item">
@@ -221,18 +145,18 @@
                                     <a href="{{ route('assignments.show', $assignment) }}" class="assignment-title">
                                         {{ $assignment->title }}
                                     </a>
-                                    <span class="badge bg-secondary">{{ $assignment->class->class_code }}</span>
+                                    <span class="badge bg-secondary">{{ $assignment->class->class_code ?? 'N/A' }}</span>
                                 </div>
                                 <div class="assignment-meta">
                                     <span class="due-date">
                                         <i class="bi bi-calendar"></i>
-                                        {{ $assignment->due_date->format('d M, H:i') }}
+                                        Deadline: {{ \Carbon\Carbon::parse($assignment->due_date)->format('d M Y, H:i') }}
                                     </span>
                                 </div>
                                 <div class="assignment-progress">
                                     @php
                                         $submitted = $assignment->submissions->count();
-                                        $total = $assignment->class->students->count();
+                                        $total = $assignment->class->students->count() ?? 1;
                                         $percentage = $total > 0 ? round(($submitted / $total) * 100) : 0;
                                     @endphp
                                     <div class="progress-info">
@@ -247,15 +171,14 @@
                             @endforeach
                         </div>
                     @else
-                        <div class="empty-state">
-                            <div class="empty-icon">
-                                <i class="bi bi-journal"></i>
+                        <div class="empty-state text-center py-4">
+                            <div class="empty-icon mx-auto mb-3">
+                                <i class="bi bi-journal fs-1 text-muted"></i>
                             </div>
-                            <h4>Belum ada tugas</h4>
-                            <p>Buat tugas pertama untuk kelas Anda</p>
+                            <h5 class="mb-2">Belum ada tugas</h5>
+                            <p class="text-muted mb-3">Buat tugas pertama untuk kelas Anda</p>
                             <a href="{{ route('assignments.teacher.create') }}" class="btn btn-primary btn-sm">
-                                <i class="bi bi-plus-circle"></i>
-                                Buat Tugas
+                                <i class="bi bi-plus-circle me-2"></i>Buat Tugas
                             </a>
                         </div>
                     @endif
@@ -263,39 +186,118 @@
             </div>
         </div>
 
-        <!-- Recent Submissions -->
-        <div class="recent-submissions-section">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="bi bi-upload"></i>
-                        Pengumpulan Terbaru
-                    </h3>
-                    <a href="{{ route('assignments.teacher.index') }}" class="btn btn-link btn-sm">Lihat Semua</a>
+        <!-- Right Column -->
+        <div class="col-xl-4 col-lg-5">
+            <!-- Today's Classes -->
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-calendar-day me-2"></i>
+                        Kelas Hari Ini
+                    </h5>
                 </div>
-                <div class="card-body">
-                    @if($recentSubmissions->count() > 0)
+                <div class="card-body p-0">
+                    @if(isset($todayClasses) && $todayClasses->count() > 0)
+                        <div class="classes-list">
+                            @foreach($todayClasses as $class)
+                            <div class="class-item">
+                                <div class="class-icon">
+                                    <i class="bi bi-mortarboard-fill"></i>
+                                </div>
+                                <div class="class-info">
+                                    <h6 class="class-name">{{ $class->class_name }}</h6>
+                                    <div class="class-meta">
+                                        <span class="class-code">{{ $class->class_code }}</span>
+                                        <span class="student-count">
+                                            <i class="bi bi-people"></i>
+                                            {{ $class->students->count() ?? 0 }} siswa
+                                        </span>
+                                    </div>
+                                    @php
+                                        $qrCode = $class->active_qr_code ?? $class->qrCodes()->whereDate('date', today())->first();
+                                    @endphp
+                                    <div class="class-schedule">
+                                        @if($qrCode)
+                                            <span class="time">
+                                                <i class="bi bi-clock"></i>
+                                                {{ $qrCode->formatted_start_time ?? $qrCode->start_time }}
+                                            </span>
+                                            @if($qrCode->is_active)
+                                                <span class="status-badge active small">Aktif</span>
+                                            @endif
+                                        @else
+                                            <span class="time muted">
+                                                <i class="bi bi-clock"></i>
+                                                Belum ada jadwal
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="class-actions">
+                                    @if($qrCode && $qrCode->is_active)
+                                        <a href="{{ route('qr-codes.show', $qrCode) }}" class="btn btn-icon btn-sm" title="Lihat QR Code">
+                                            <i class="bi bi-qr-code-scan"></i>
+                                        </a>
+                                    @else
+                                        <a href="{{ route('qr-codes.create', ['class_id' => $class->id]) }}" class="btn btn-icon btn-sm" title="Buat QR Code">
+                                            <i class="bi bi-plus-lg"></i>
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="empty-state text-center py-4">
+                            <div class="empty-icon mx-auto mb-3">
+                                <i class="bi bi-calendar-x fs-1 text-muted"></i>
+                            </div>
+                            <h5 class="mb-2">Tidak ada kelas hari ini</h5>
+                            <p class="text-muted mb-3">Anda bisa membuat QR code untuk kelas lain</p>
+                            <a href="{{ route('qr-codes.create') }}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-qr-code-scan me-2"></i>Buat QR Code
+                            </a>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Recent Submissions -->
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-upload me-2"></i>
+                            Pengumpulan Terbaru
+                        </h5>
+                        <a href="{{ route('assignments.teacher.index') }}" class="btn btn-link btn-sm">
+                            Lihat Semua <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    @if(isset($recentSubmissions) && $recentSubmissions->count() > 0)
                         <div class="submissions-list">
                             @foreach($recentSubmissions as $submission)
                             <div class="submission-item">
                                 <div class="submission-avatar">
                                     <div class="avatar">
-                                        {{ strtoupper(substr($submission->student->name, 0, 1)) }}
+                                        {{ strtoupper(substr($submission->student->name ?? 'U', 0, 1)) }}
                                     </div>
                                 </div>
                                 <div class="submission-content">
-                                    <h5>{{ $submission->student->name }}</h5>
-                                    <p class="text-muted small mb-1">{{ Str::limit($submission->assignment->title, 30) }}</p>
-                                    <small class="text-muted">
+                                    <h6 class="submission-name">{{ $submission->student->name ?? 'Unknown' }}</h6>
+                                    <p class="submission-title">{{ Str::limit($submission->assignment->title ?? 'Tugas', 30) }}</p>
+                                    <small class="submission-time">
                                         <i class="bi bi-clock"></i>
-                                        {{ $submission->submitted_at->diffForHumans() }}
+                                        {{ $submission->submitted_at ? \Carbon\Carbon::parse($submission->submitted_at)->diffForHumans() : 'Baru saja' }}
                                     </small>
                                 </div>
                                 <div class="submission-status">
                                     @if($submission->score)
                                         <span class="badge bg-success">{{ $submission->score }}</span>
                                     @else
-                                        <a href="{{ route('assignments.submissions.grade', $submission) }}" class="btn btn-sm btn-warning">
+                                        <a href="{{ route('submissions.grade', $submission) }}" class="btn btn-sm btn-warning">
                                             <i class="bi bi-pencil"></i> Nilai
                                         </a>
                                     @endif
@@ -304,26 +306,24 @@
                             @endforeach
                         </div>
                     @else
-                        <div class="empty-state">
-                            <div class="empty-icon">
-                                <i class="bi bi-upload"></i>
+                        <div class="empty-state text-center py-4">
+                            <div class="empty-icon mx-auto mb-3">
+                                <i class="bi bi-upload fs-1 text-muted"></i>
                             </div>
-                            <h4>Belum ada pengumpulan</h4>
-                            <p>Tunggu siswa mengumpulkan tugas mereka</p>
+                            <h5 class="mb-2">Belum ada pengumpulan</h5>
+                            <p class="text-muted">Tunggu siswa mengumpulkan tugas mereka</p>
                         </div>
                     @endif
                 </div>
             </div>
-        </div>
 
-        <!-- Quick Actions -->
-        <div class="quick-actions-section">
+            <!-- Quick Actions -->
             <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="bi bi-lightning"></i>
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-lightning me-2"></i>
                         Aksi Cepat
-                    </h3>
+                    </h5>
                 </div>
                 <div class="card-body">
                     <div class="quick-actions-grid">
@@ -368,20 +368,6 @@
                             </div>
                             <div class="action-text">Tambah Siswa</div>
                         </a>
-                        
-                        <a href="{{ route('classes.index') }}" class="quick-action action-purple">
-                            <div class="action-icon">
-                                <i class="bi bi-mortarboard"></i>
-                            </div>
-                            <div class="action-text">Kelola Kelas</div>
-                        </a>
-                        
-                        <a href="{{ route('students.import') }}" class="quick-action action-orange">
-                            <div class="action-icon">
-                                <i class="bi bi-file-excel"></i>
-                            </div>
-                            <div class="action-text">Import Excel</div>
-                        </a>
                     </div>
                 </div>
             </div>
@@ -389,523 +375,425 @@
     </div>
 </div>
 
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <script>
-    window.attendanceChartData = {
-        labels: <?php echo json_encode($attendanceStats['labels'] ?? ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']); ?>,
-        present: <?php echo json_encode($attendanceStats['present'] ?? [12, 19, 15, 17, 14, 16, 18]); ?>,
-        late: <?php echo json_encode($attendanceStats['late'] ?? [2, 3, 1, 4, 2, 3, 1]); ?>,
-        absent: <?php echo json_encode($attendanceStats['absent'] ?? [1, 0, 2, 1, 0, 0, 1]); ?>
-    };
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Chart
-    const ctx = document.getElementById('attendanceChart').getContext('2d');
+(function() {
+    'use strict';
     
-    const attendanceChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: window.attendanceChartData.labels,
-            datasets: [{
-                label: 'Hadir',
-                data: window.attendanceChartData.present,
-                borderColor: '#10b981',
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                borderWidth: 2,
-                tension: 0.4,
-                fill: true
-            }, {
-                label: 'Terlambat',
-                data: window.attendanceChartData.late,
-                borderColor: '#f59e0b',
-                backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                borderWidth: 2,
-                tension: 0.4,
-                fill: true
-            }, {
-                label: 'Absen',
-                data: window.attendanceChartData.absent,
-                borderColor: '#ef4444',
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                borderWidth: 2,
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'top',
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 5
-                    }
-                }
+    document.addEventListener('DOMContentLoaded', function() {
+        // Data dari controller
+        var attendanceStats = @json($attendanceStats ?? []);
+        
+        var labels = attendanceStats.labels || ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+        var presentData = attendanceStats.present || [0, 0, 0, 0, 0, 0, 0];
+        var lateData = attendanceStats.late || [0, 0, 0, 0, 0, 0, 0];
+        var absentData = attendanceStats.absent || [0, 0, 0, 0, 0, 0, 0];
+        
+        // Pastikan 7 elemen
+        while (labels.length < 7) { labels.push('Hari'); }
+        while (presentData.length < 7) { presentData.push(0); }
+        while (lateData.length < 7) { lateData.push(0); }
+        while (absentData.length < 7) { absentData.push(0); }
+        
+        var ctx = document.getElementById('attendanceChart');
+        if (!ctx) return;
+        
+        var hasData = false;
+        for (var i = 0; i < presentData.length; i++) {
+            if (presentData[i] > 0 || lateData[i] > 0 || absentData[i] > 0) {
+                hasData = true;
+                break;
             }
         }
-    });
-
-    // Period Selector
-    document.querySelectorAll('.period-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
+        
+        if (!hasData) {
+            var emptyMsg = document.getElementById('chartEmptyMessage');
+            if (emptyMsg) emptyMsg.style.display = 'block';
+            return;
+        }
+        
+        var emptyMsg = document.getElementById('chartEmptyMessage');
+        if (emptyMsg) emptyMsg.style.display = 'none';
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Hadir',
+                    data: presentData,
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#10b981',
+                    pointBorderColor: '#fff',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }, {
+                    label: 'Terlambat',
+                    data: lateData,
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#f59e0b',
+                    pointBorderColor: '#fff',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }, {
+                    label: 'Absen',
+                    data: absentData,
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#ef4444',
+                    pointBorderColor: '#fff',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 10 } },
+                    tooltip: { callbacks: { label: function(context) { return context.dataset.label + ': ' + context.raw + ' siswa'; } } }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 5, callback: function(v) { return v + ' siswa'; } }, title: { display: true, text: 'Jumlah Siswa' } },
+                    x: { title: { display: true, text: 'Hari' } }
+                }
+            }
+        });
+        
+        // Tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.forEach(function(el) {
+            new bootstrap.Tooltip(el);
         });
     });
-});
+})();
+
+function refreshChart() {
+    window.location.reload();
+}
 </script>
 
 <style>
-/* Dashboard Base Styles */
-.dashboard-container {
-    padding: 20px;
+/* CSS Variables */
+:root {
+    --primary: #4f46e5;
+    --primary-light: #e0e7ff;
+    --success: #10b981;
+    --success-light: #d1fae5;
+    --warning: #f59e0b;
+    --warning-light: #fef3c7;
+    --info: #3b82f6;
+    --info-light: #dbeafe;
+    --danger: #ef4444;
+    --danger-light: #fee2e2;
+    --secondary: #64748b;
+    --secondary-light: #f1f5f9;
+    --border-radius: 12px;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --transition: all 0.2s ease;
 }
 
 /* Welcome Card */
 .welcome-card {
     background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
-    border-radius: 16px;
-    padding: 30px;
+    border-radius: 1rem;
+    padding: 1.5rem;
     color: white;
-    margin-bottom: 30px;
     box-shadow: 0 10px 25px rgba(79, 70, 229, 0.2);
 }
 
 .welcome-content {
     display: flex;
-    flex-direction: column;
-    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
 }
 
-@media (min-width: 768px) {
-    .welcome-content {
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-    }
+.welcome-text {
+    flex: 1;
 }
 
 .welcome-title {
-    font-size: 24px;
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
     font-weight: 700;
-    margin-bottom: 8px;
+    margin-bottom: 0.25rem;
 }
 
 .welcome-date {
     opacity: 0.9;
-    font-size: 14px;
-    display: flex;
+    font-size: 0.75rem;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 0.5rem;
 }
 
 .welcome-actions {
     display: flex;
-    gap: 12px;
+    gap: 0.75rem;
     flex-wrap: wrap;
 }
 
 .welcome-actions .btn {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 20px;
-    border-radius: 10px;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.75rem;
     font-weight: 600;
-    border: none;
-    text-decoration: none;
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.welcome-actions .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    font-size: 0.813rem;
+    transition: var(--transition);
 }
 
 .welcome-actions .btn-primary {
     background: white;
     color: #4f46e5;
+    border: none;
+}
+
+.welcome-actions .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
 .welcome-actions .btn-success {
     background: rgba(255, 255, 255, 0.15);
-    color: white;
     border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .welcome-actions .btn-success:hover {
     background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
 }
 
-/* Stats Grid */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
-}
-
-.stat-card {
+/* Stats Cards */
+.stats-card {
     background: white;
-    border-radius: 16px;
-    padding: 24px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
+    border-radius: var(--border-radius);
+    padding: 0.875rem;
+    border: 1px solid #e5e7eb;
+    transition: var(--transition);
     position: relative;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s, box-shadow 0.2s;
-    overflow: hidden;
 }
 
-.stat-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+.stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
-.stat-card::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-}
-
-.stat-primary::before { background: #4f46e5; }
-.stat-success::before { background: #10b981; }
-.stat-info::before { background: #3b82f6; }
-.stat-warning::before { background: #f59e0b; }
-
-.stat-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 12px;
+.stats-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
-    color: white;
 }
 
-.stat-primary .stat-icon { background: #4f46e5; }
-.stat-success .stat-icon { background: #10b981; }
-.stat-info .stat-icon { background: #3b82f6; }
-.stat-warning .stat-icon { background: #f59e0b; }
-
-.stat-content {
-    flex: 1;
+.stats-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1f2937;
 }
 
-.stat-number {
-    font-size: 32px;
-    font-weight: 800;
-    line-height: 1;
-    margin-bottom: 4px;
+.stats-label {
+    font-size: 0.688rem;
+    color: #6b7280;
 }
 
-.stat-title {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 2px;
-    color: #333;
-}
-
-.stat-subtitle {
-    font-size: 12px;
-    color: #666;
-}
-
-.stat-link {
+.stats-link {
     position: absolute;
-    top: 20px;
-    right: 20px;
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    background: #f8fafc;
+    bottom: 0.875rem;
+    right: 0.875rem;
+    width: 28px;
+    height: 28px;
+    border-radius: 0.5rem;
+    background: #f1f5f9;
     color: #64748b;
     display: flex;
     align-items: center;
     justify-content: center;
     text-decoration: none;
-    opacity: 0;
-    transition: opacity 0.2s, background 0.2s;
+    transition: var(--transition);
 }
 
-.stat-card:hover .stat-link {
-    opacity: 1;
-}
-
-.stat-link:hover {
+.stats-link:hover {
     background: #e2e8f0;
     color: #4f46e5;
 }
 
-/* Dashboard Content */
-.dashboard-content {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 24px;
-}
-
-@media (min-width: 1024px) {
-    .dashboard-content {
-        grid-template-columns: 2fr 1fr;
-    }
-}
-
-/* Card Styles */
+/* Cards */
 .card {
     background: white;
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+    border-radius: var(--border-radius);
     overflow: hidden;
 }
 
 .card-header {
-    padding: 20px;
-    border-bottom: 1px solid #e2e8f0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 0.875rem 1rem;
 }
 
 .card-title {
-    font-size: 18px;
     font-weight: 600;
+    color: #1f2937;
     margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: #333;
-}
-
-.card-title i {
-    color: #4f46e5;
+    font-size: 0.938rem;
 }
 
 .card-body {
-    padding: 20px;
+    padding: 1rem;
 }
 
 /* Chart Container */
-.chart-section {
-    grid-column: 1 / -1;
-}
-
-@media (min-width: 1024px) {
-    .chart-section {
-        grid-column: 1;
-    }
-}
-
 .chart-container {
     height: 300px;
     position: relative;
 }
 
-.period-selector {
-    display: flex;
-    background: #f8fafc;
-    border-radius: 12px;
-    padding: 4px;
-}
-
-.period-btn {
-    padding: 6px 16px;
-    border: none;
-    background: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #64748b;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.period-btn:hover {
-    color: #4f46e5;
-}
-
-.period-btn.active {
-    background: white;
-    color: #4f46e5;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-/* Today's Classes */
-.today-classes-section {
-    order: 2;
-}
-
-@media (min-width: 1024px) {
-    .today-classes-section {
-        order: 1;
-        grid-column: 2;
-        grid-row: 1;
+@media (max-width: 768px) {
+    .chart-container {
+        height: 250px;
     }
 }
 
+/* Classes List */
 .classes-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
 }
 
 .class-item {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 16px;
-    background: #f8fafc;
-    border-radius: 12px;
-    transition: background 0.2s;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    transition: var(--transition);
+}
+
+.class-item:last-child {
+    border-bottom: none;
 }
 
 .class-item:hover {
-    background: #f1f5f9;
+    background-color: #f8fafc;
 }
 
 .class-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
     background: #e0e7ff;
     color: #4f46e5;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+    font-size: 1.125rem;
+    flex-shrink: 0;
 }
 
 .class-info {
     flex: 1;
 }
 
-.class-info h4 {
-    font-size: 16px;
+.class-name {
+    font-size: 0.875rem;
     font-weight: 600;
-    margin-bottom: 4px;
-    color: #333;
+    color: #1f2937;
+    margin-bottom: 0.25rem;
 }
 
-.class-details {
+.class-meta {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 6px;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    font-size: 0.688rem;
+    color: #6b7280;
 }
 
-.class-details .badge {
-    background: #e2e8f0;
-    color: #475569;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.students {
-    font-size: 12px;
-    color: #64748b;
-    display: flex;
-    align-items: center;
-    gap: 4px;
+.class-code {
+    background: #f3f4f6;
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+    font-family: monospace;
 }
 
 .class-schedule {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.25rem;
 }
 
 .time {
-    font-size: 12px;
+    font-size: 0.688rem;
     color: #64748b;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 4px;
-}
-
-.time i {
-    color: #10b981;
+    gap: 0.25rem;
 }
 
 .time.muted {
     color: #94a3b8;
 }
 
-.time.muted i {
-    color: #94a3b8;
-}
-
-.status {
-    font-size: 11px;
-    padding: 2px 8px;
+.status-badge.active {
     background: #10b981;
     color: white;
-    border-radius: 12px;
-    font-weight: 500;
+    font-size: 0.625rem;
+    padding: 0.125rem 0.375rem;
+    border-radius: 1rem;
 }
 
-.class-actions .btn {
-    width: 36px;
-    height: 36px;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 10px;
+.class-actions {
+    flex-shrink: 0;
 }
 
-/* Recent Assignments */
-.recent-assignments-section {
-    order: 3;
-}
-
-@media (min-width: 1024px) {
-    .recent-assignments-section {
-        grid-column: 1;
-        grid-row: 2;
-    }
-}
-
+/* Assignments List */
 .assignments-list {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 0.75rem;
 }
 
 .assignment-item {
-    padding: 16px;
+    padding: 0.875rem;
     background: #f8fafc;
-    border-radius: 12px;
+    border-radius: 10px;
 }
 
 .assignment-header {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 8px;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
 }
 
 .assignment-title {
-    font-size: 14px;
+    font-size: 0.813rem;
     font-weight: 600;
-    color: #333;
+    color: #1f2937;
     text-decoration: none;
-    flex: 1;
 }
 
 .assignment-title:hover {
@@ -913,41 +801,41 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .assignment-meta {
-    margin-bottom: 12px;
+    margin-bottom: 0.75rem;
 }
 
 .due-date {
-    font-size: 12px;
+    font-size: 0.688rem;
     color: #64748b;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 0.25rem;
 }
 
 .assignment-progress {
-    margin-top: 12px;
+    margin-top: 0.5rem;
 }
 
 .progress-info {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 6px;
+    margin-bottom: 0.375rem;
 }
 
 .progress-value {
-    font-size: 14px;
+    font-size: 0.75rem;
     font-weight: 600;
     color: #4f46e5;
 }
 
 .progress-text {
-    font-size: 12px;
+    font-size: 0.688rem;
     color: #64748b;
 }
 
 .progress {
-    height: 6px;
+    height: 5px;
     background: #e2e8f0;
     border-radius: 3px;
     overflow: hidden;
@@ -957,34 +845,29 @@ document.addEventListener('DOMContentLoaded', function() {
     height: 100%;
     background: linear-gradient(90deg, #4f46e5, #3730a3);
     border-radius: 3px;
-    transition: width 1s ease-in-out;
+    transition: width 0.6s ease;
 }
 
-/* Recent Submissions */
-.recent-submissions-section {
-    order: 4;
-}
-
-@media (min-width: 1024px) {
-    .recent-submissions-section {
-        grid-column: 2;
-        grid-row: 2;
-    }
-}
-
+/* Submissions List */
 .submissions-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
 }
 
 .submission-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 16px;
-    background: #f8fafc;
-    border-radius: 12px;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.submission-item:last-child {
+    border-bottom: none;
+}
+
+.submission-avatar {
+    flex-shrink: 0;
 }
 
 .avatar {
@@ -997,36 +880,49 @@ document.addEventListener('DOMContentLoaded', function() {
     align-items: center;
     justify-content: center;
     font-weight: 600;
-    font-size: 14px;
+    font-size: 0.875rem;
 }
 
 .submission-content {
     flex: 1;
 }
 
-.submission-content h5 {
-    font-size: 14px;
+.submission-name {
+    font-size: 0.813rem;
     font-weight: 600;
-    margin-bottom: 2px;
-    color: #333;
+    color: #1f2937;
+    margin-bottom: 0.125rem;
+}
+
+.submission-title {
+    font-size: 0.688rem;
+    color: #64748b;
+    margin-bottom: 0.125rem;
+}
+
+.submission-time {
+    font-size: 0.625rem;
+    color: #94a3b8;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.submission-status {
+    flex-shrink: 0;
 }
 
 .submission-status .btn {
-    padding: 6px 12px;
-    font-size: 12px;
-    border-radius: 8px;
+    padding: 0.25rem 0.625rem;
+    font-size: 0.688rem;
+    border-radius: 0.5rem;
 }
 
 /* Quick Actions */
-.quick-actions-section {
-    order: 5;
-    grid-column: 1 / -1;
-}
-
 .quick-actions-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 0.75rem;
 }
 
 .quick-action {
@@ -1034,152 +930,190 @@ document.addEventListener('DOMContentLoaded', function() {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 24px 16px;
-    border-radius: 16px;
+    padding: 0.875rem;
+    border-radius: 0.75rem;
     text-decoration: none;
-    transition: transform 0.2s, box-shadow 0.2s;
-    min-height: 120px;
+    transition: var(--transition);
 }
 
 .quick-action:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
 .action-icon {
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+    font-size: 1rem;
     color: white;
-    margin-bottom: 12px;
+    margin-bottom: 0.5rem;
 }
 
 .action-text {
-    font-size: 14px;
+    font-size: 0.688rem;
     font-weight: 600;
     color: white;
     text-align: center;
 }
 
-/* Color Variants for Quick Actions */
+/* Action Colors */
 .action-primary { background: linear-gradient(135deg, #4f46e5, #3730a3); }
 .action-success { background: linear-gradient(135deg, #10b981, #0d9e70); }
 .action-info { background: linear-gradient(135deg, #3b82f6, #2563eb); }
 .action-warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
 .action-secondary { background: linear-gradient(135deg, #64748b, #475569); }
 .action-danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
-.action-purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
-.action-orange { background: linear-gradient(135deg, #fb923c, #f97316); }
 
-/* Empty States */
+/* Empty State */
 .empty-state {
-    padding: 40px 20px;
     text-align: center;
 }
 
 .empty-icon {
-    font-size: 48px;
-    color: #cbd5e1;
-    margin-bottom: 16px;
+    width: 56px;
+    height: 56px;
+    background: #f9fafb;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.empty-state h4 {
-    font-size: 16px;
+.empty-state h5 {
+    font-size: 0.875rem;
     font-weight: 600;
-    color: #475569;
-    margin-bottom: 8px;
+    color: #1f2937;
 }
 
 .empty-state p {
-    color: #64748b;
-    margin-bottom: 20px;
-    font-size: 14px;
+    font-size: 0.75rem;
+    color: #6b7280;
 }
 
-.empty-state .btn {
+/* Buttons */
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    padding: 0.375rem 0.875rem;
+    transition: var(--transition);
+    font-size: 0.813rem;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.625rem;
+    font-size: 0.75rem;
+}
+
+.btn-icon {
+    width: 30px;
+    height: 30px;
+    padding: 0;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-}
-
-/* Breadcrumb */
-.breadcrumb-nav {
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    color: #6b7280;
     background: white;
-    padding: 16px 0;
-    margin-bottom: 24px;
-    border-bottom: 1px solid #e2e8f0;
 }
 
-.breadcrumb-nav .container {
-    padding: 0 20px;
-}
-
-.breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.breadcrumb-link {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    color: #64748b;
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.breadcrumb-link:hover {
+.btn-icon:hover {
+    background: #f9fafb;
     color: #4f46e5;
+    border-color: #d1d5db;
 }
 
-.breadcrumb-link i {
-    font-size: 16px;
+.btn-link {
+    color: #4f46e5;
+    text-decoration: none;
+    font-size: 0.75rem;
 }
 
-/* Responsive Adjustments */
+.btn-link:hover {
+    text-decoration: underline;
+}
+
+/* Badge */
+.badge {
+    font-size: 0.688rem;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+}
+
+.bg-primary-light { background: #e0e7ff; }
+.bg-success-light { background: #d1fae5; }
+.bg-info-light { background: #dbeafe; }
+.bg-warning-light { background: #fef3c7; }
+
+.text-primary { color: #4f46e5 !important; }
+.text-success { color: #10b981 !important; }
+.text-info { color: #3b82f6 !important; }
+.text-warning { color: #f59e0b !important; }
+
+/* Responsive */
+@media (min-width: 992px) {
+    .stats-icon {
+        width: 44px;
+        height: 44px;
+    }
+    
+    .stats-value {
+        font-size: 1.375rem;
+    }
+    
+    .card-body {
+        padding: 1.25rem;
+    }
+}
+
 @media (max-width: 768px) {
-    .dashboard-container {
-        padding: 16px;
+    .container-fluid {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
     }
     
     .welcome-card {
-        padding: 20px;
+        padding: 1rem;
     }
     
-    .welcome-title {
-        font-size: 20px;
+    .stats-icon {
+        width: 32px;
+        height: 32px;
     }
     
-    .stats-grid {
-        grid-template-columns: 1fr;
+    .stats-icon i {
+        font-size: 0.875rem;
     }
     
-    .stat-card {
-        padding: 20px;
+    .stats-value {
+        font-size: 1rem;
     }
     
-    .stat-number {
-        font-size: 28px;
+    .class-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
     }
     
-    .card-header {
+    .quick-actions-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 576px) {
+    .welcome-content {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
+        text-align: center;
     }
     
-    .period-selector {
-        align-self: stretch;
+    .welcome-actions {
+        justify-content: center;
     }
     
     .quick-actions-grid {
@@ -1187,92 +1121,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 }
 
-@media (max-width: 480px) {
-    .welcome-actions {
-        flex-direction: column;
+/* Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
     }
-    
-    .welcome-actions .btn {
-        width: 100%;
-        justify-content: center;
-    }
-    
-    .quick-actions-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .class-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-    }
-    
-    .class-info {
-        width: 100%;
-    }
-    
-    .class-actions {
-        align-self: flex-end;
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
-/* Utilities */
-.text-muted {
-    color: #64748b !important;
-}
-
-.small {
-    font-size: 12px !important;
-}
-
-.mb-1 {
-    margin-bottom: 4px !important;
-}
-
-.btn-link {
-    text-decoration: none;
-    color: #4f46e5;
-    font-weight: 500;
-}
-
-.btn-link:hover {
-    text-decoration: underline;
-}
-
-.btn-sm {
-    padding: 6px 12px !important;
-    font-size: 12px !important;
-}
-
-.btn-outline-primary {
-    background: transparent;
-    border: 1px solid #4f46e5;
-    color: #4f46e5;
-}
-
-.btn-outline-primary:hover {
-    background: #4f46e5;
-    color: white;
-}
-
-/* Bootstrap Badge Override */
-.badge {
-    font-size: 12px;
-    font-weight: 500;
-    padding: 4px 8px;
-    border-radius: 12px;
-}
-
-.bg-secondary {
-    background: #64748b !important;
-}
-
-.bg-success {
-    background: #10b981 !important;
-}
-
-.bg-warning {
-    background: #f59e0b !important;
+.stats-card, .card {
+    animation: fadeIn 0.3s ease forwards;
 }
 </style>
 @endsection

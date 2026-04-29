@@ -372,7 +372,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('markAttendanceForm');
         const formData = new FormData(form);
         
-        fetch('{{ route("attendance.mark") }}', {
+        fetch('{{ route("attendance.teacher.mark") }}', {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',

@@ -10,6 +10,9 @@ use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StudentController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 // =================== PUBLIC ROUTES ===================
 Route::middleware('guest')->group(function () {
@@ -124,163 +127,111 @@ Route::middleware('auth')->group(function () {
         
         // ===== SCAN QR CODE ROUTES (SISWA) =====
         Route::middleware('role:student')->group(function () {
-            Route::get('/scan', [AttendanceController::class, 'scanPage'])->name('scan.page');
-            Route::get('/scan/{code}', [AttendanceController::class, 'scanQrCode'])->name('scan.code');
-            Route::post('/scan/{code}', [AttendanceController::class, 'processScan'])->name('scan.process');
-            Route::get('/scan/{code}/confirm', [AttendanceController::class, 'showConfirm'])->name('scan.confirm');
+            Route::get('/scan-page', [AttendanceController::class, 'scanPage'])->name('scan.page');
+            Route::get('/scan/{code}', [AttendanceController::class, 'showConfirm'])->name('scan.confirm');
+            Route::post('/scan-process', [AttendanceController::class, 'processScan'])->name('scan.process');
+            Route::get('/scan-result/{id}', [AttendanceController::class, 'showResult'])->name('scan.result');
+            Route::get('/student', [AttendanceController::class, 'indexStudent'])->name('student.index');
+            Route::get('/student/{attendance}', [AttendanceController::class, 'showStudent'])->name('student.show');
         });
         
         // ===== ROUTES UNTUK GURU =====
-        Route::prefix('teacher')->name('teacher.')->middleware('role:teacher,guru,admin')->group(function () {
-            Route::get('/', [AttendanceController::class, 'indexTeacher'])->name('index');
-            Route::get('/class-detail/{class}', [AttendanceController::class, 'showClass'])->name('class.detail');
-            Route::post('/mark', [AttendanceController::class, 'markAttendance'])->name('mark');
-            Route::get('/export', [AttendanceController::class, 'export'])->name('export');
-            Route::get('/manual/create', [AttendanceController::class, 'createManual'])->name('manual.create');
-            Route::post('/manual/store', [AttendanceController::class, 'storeManual'])->name('manual.store');
-            Route::get('/manual', [AttendanceController::class, 'createManual'])->name('manual');
+        Route::middleware('role:teacher,guru,admin')->group(function () {
+            // Dashboard
+            Route::get('/teacher', [AttendanceController::class, 'indexTeacher'])->name('teacher.index');
             
-            // Edit/delete
-            Route::get('/{attendance}/edit', [AttendanceController::class, 'edit'])->name('edit');
-            Route::put('/{attendance}', [AttendanceController::class, 'update'])->name('update');
-            Route::delete('/{attendance}', [AttendanceController::class, 'destroy'])->name('destroy');
+            // Detail kelas
+            Route::get('/teacher/class/{classId}', [AttendanceController::class, 'showClass'])->name('teacher.class.show');
             
-            // QR Code related
-            Route::get('/qr/{qrCode}', [AttendanceController::class, 'viewQrAttendance'])->name('qr.view');
+            // Mark attendance (AJAX)
+            Route::post('/teacher/mark', [AttendanceController::class, 'markAttendance'])->name('teacher.mark');
             
-            // Bulk manual attendance
-            Route::get('/manual/bulk', [AttendanceController::class, 'createBulkManual'])->name('manual.bulk');
-            Route::post('/manual/bulk/store', [AttendanceController::class, 'storeBulkManual'])->name('manual.bulk.store');
+            // Export
+            Route::get('/teacher/export', [AttendanceController::class, 'export'])->name('teacher.export');
+            
+            // Manual entry
+            Route::get('/teacher/manual/create', [AttendanceController::class, 'createManual'])->name('teacher.manual.create');
+            Route::post('/teacher/manual/store', [AttendanceController::class, 'storeManual'])->name('teacher.manual.store');
+            
+            // Bulk manual
+            Route::get('/teacher/manual/bulk', [AttendanceController::class, 'createBulkManual'])->name('teacher.manual.bulk');
+            Route::post('/teacher/manual/bulk/store', [AttendanceController::class, 'storeBulkManual'])->name('teacher.manual.bulk.store');
             
             // Quick generate QR
-            Route::post('/quick-generate/{classId}', [AttendanceController::class, 'quickGenerateQr'])
-                ->name('quick-generate');
+            Route::post('/teacher/quick-generate/{classId}', [AttendanceController::class, 'quickGenerateQr'])->name('teacher.quick-generate');
+            
+            // Edit/Delete attendance
+            Route::get('/teacher/attendance/{attendance}/edit', [AttendanceController::class, 'edit'])->name('teacher.attendance.edit');
+            Route::put('/teacher/attendance/{attendance}', [AttendanceController::class, 'update'])->name('teacher.attendance.update');
+            Route::delete('/teacher/attendance/{attendance}', [AttendanceController::class, 'destroy'])->name('teacher.attendance.destroy');
             
             // Get class students (AJAX)
-            Route::get('/class-students/{classId}', [AttendanceController::class, 'getClassStudents'])
-                ->name('class-students');
+            Route::get('/teacher/class-students/{classId}', [AttendanceController::class, 'getClassStudents'])->name('teacher.class-students');
             
-            // Realtime attendance monitoring
-            Route::get('/realtime/{qrCodeId}', [AttendanceController::class, 'realtimeAttendance'])
-                ->name('realtime');
+            // Realtime
+            Route::get('/teacher/realtime/{qrCodeId}', [AttendanceController::class, 'realtimeAttendance'])->name('teacher.realtime');
+            Route::get('/teacher/realtime-data/{qrCodeId}', [AttendanceController::class, 'getRealtimeData'])->name('teacher.realtime.data');
             
-            // Realtime data API (AJAX)
-            Route::get('/realtime-data/{qrCodeId}', [AttendanceController::class, 'getRealtimeData'])
-                ->name('realtime.data');
+            // Bulk delete
+            Route::post('/teacher/bulk-delete', [AttendanceController::class, 'bulkDelete'])->name('teacher.bulk.delete');
         });
-        
-        // ===== ROUTES UNTUK SISWA =====
-        Route::prefix('student')->name('student.')->middleware('role:student')->group(function () {
-            Route::get('/', [AttendanceController::class, 'indexStudent'])->name('index');
-            Route::get('/{attendance}', [AttendanceController::class, 'showStudent'])->name('show');
-            Route::get('/statistics', [AttendanceController::class, 'studentStatistics'])->name('statistics');
-        });
-        
-        // ===== CLASS ATTENDANCE ROUTES (UNTUK GURU) =====
-        Route::get('/class/{class}', [AttendanceController::class, 'classAttendance'])
-            ->name('class.show')
-            ->middleware('role:teacher,guru,admin');
-        
-        Route::get('/student/{class}/{student}', [AttendanceController::class, 'studentAttendance'])
-            ->name('student.detail')
-            ->middleware('role:teacher,guru,admin');
         
         // ===== API ROUTES =====
-        Route::post('/api/scan-process', [AttendanceController::class, 'scanProcess'])
-            ->name('api.scan-process')
-            ->middleware('auth');
+        Route::post('/api/scan-process', [AttendanceController::class, 'scanProcess'])->name('api.scan-process');
     });
     
     // =================== QR CODE ROUTES ===================
     Route::prefix('qr-codes')->name('qr-codes.')->middleware('role:teacher,guru,admin')->group(function () {
-        // CRUD Routes
         Route::get('/', [QrCodeController::class, 'index'])->name('index');
         Route::get('/create', [QrCodeController::class, 'create'])->name('create');
         Route::post('/', [QrCodeController::class, 'store'])->name('store');
         Route::get('/{qrCode}', [QrCodeController::class, 'show'])->name('show');
         Route::get('/{qrCode}/edit', [QrCodeController::class, 'edit'])->name('edit');
         Route::put('/{qrCode}', [QrCodeController::class, 'update'])->name('update');
-        Route::delete('/{qrCode}', [QrCodeController::class, 'destroy'])->name('destroy');
-        
-        // Dashboard
+        Route::post('/{qrCode}/delete', [QrCodeController::class, 'destroy'])->name('delete');
         Route::get('/dashboard', [QrCodeController::class, 'dashboard'])->name('dashboard');
-        
-        // Download
         Route::get('/{qrCode}/download', [QrCodeController::class, 'download'])->name('download');
-        
-        // Regenerate image
         Route::post('/{qrCode}/regenerate-image', [QrCodeController::class, 'regenerateImage'])->name('regenerate-image');
-        
-        // Activation/Deactivation
         Route::post('/{qrCode}/activate', [QrCodeController::class, 'activate'])->name('activate');
         Route::post('/{qrCode}/deactivate', [QrCodeController::class, 'deactivate'])->name('deactivate');
-        
-        // Preview (AJAX)
         Route::post('/preview', [QrCodeController::class, 'preview'])->name('preview');
-        
-        // Active for date (AJAX)
         Route::get('/active/date', [QrCodeController::class, 'getActiveForDate'])->name('active.date');
-        
-        // Generate for class
         Route::post('/generate-for-class', [QrCodeController::class, 'generateForClass'])->name('generate-for-class');
-        
-        // Quick generate
         Route::post('/quick-generate', [QrCodeController::class, 'quickGenerate'])->name('quick-generate');
-        
-        // Bulk generate
         Route::get('/bulk-create', [QrCodeController::class, 'bulkGenerate'])->name('bulk-create');
         Route::post('/bulk-create', [QrCodeController::class, 'bulkGenerate'])->name('bulk-store');
-        
-        // Debug
         Route::get('/debug', [QrCodeController::class, 'debug'])->name('debug');
-        
-        // Generate base64 (API)
         Route::post('/generate-base64', [QrCodeController::class, 'generateBase64'])->name('generate-base64');
     });
     
     // =================== CLASS ROUTES ===================
     Route::prefix('classes')->name('classes.')->group(function () {
-        // Routes untuk semua user yang memiliki akses
         Route::get('/', [ClassController::class, 'index'])->name('index');
         
-        // Routes hanya untuk teacher/guru/admin
         Route::middleware(['role:teacher,guru,admin'])->group(function () {
             Route::get('/create', [ClassController::class, 'create'])->name('create');
             Route::post('/', [ClassController::class, 'store'])->name('store');
-        });
-        
-        // Route dengan parameter HARUS DITEMPATKAN TERAKHIR
-        Route::get('/{id}', [ClassController::class, 'show'])->name('show');
-        
-        // Routes untuk edit/update/delete (hanya teacher/admin)
-        Route::middleware(['role:teacher,guru,admin'])->group(function () {
+            Route::get('/import', [ClassController::class, 'import'])->name('import');
+            Route::post('/import/process', [ClassController::class, 'processImport'])->name('import.process');
+            Route::get('/import/template', [ClassController::class, 'downloadTemplate'])->name('import.template');
+            Route::post('/{class}/activate', [ClassController::class, 'activate'])->name('activate');
+            Route::post('/{class}/deactivate', [ClassController::class, 'deactivate'])->name('deactivate');
             Route::get('/{id}/edit', [ClassController::class, 'edit'])->name('edit');
             Route::put('/{id}', [ClassController::class, 'update'])->name('update');
             Route::delete('/{id}', [ClassController::class, 'destroy'])->name('destroy');
-            
-            // Student management
             Route::post('/{id}/add-student', [ClassController::class, 'addStudent'])->name('add-student');
             Route::delete('/{id}/remove-student/{student}', [ClassController::class, 'removeStudent'])->name('remove-student');
             Route::post('/{id}/bulk-add-students', [ClassController::class, 'bulkAddStudents'])->name('bulk-add-students');
-            
-            // Student list view
             Route::get('/{id}/students', [ClassController::class, 'students'])->name('students');
-            
-            // Activation
-            Route::post('/{id}/activate', [ClassController::class, 'activate'])->name('activate');
-            Route::post('/{id}/deactivate', [ClassController::class, 'deactivate'])->name('deactivate');
-            
-            // Search students (AJAX)
             Route::get('/{id}/search-students', [ClassController::class, 'searchStudents'])->name('search-students');
-            
-            // Statistics (AJAX)
             Route::get('/{id}/stats', [ClassController::class, 'stats'])->name('stats');
         });
+        
+        Route::get('/{id}', [ClassController::class, 'show'])->name('show');
     });
     
     // =================== STUDENT ROUTES ===================
     Route::prefix('students')->name('students.')->middleware('role:teacher,guru,admin')->group(function () {
-        // CRUD routes
         Route::get('/', [StudentController::class, 'index'])->name('index');
         Route::get('/create', [StudentController::class, 'create'])->name('create');
         Route::post('/', [StudentController::class, 'store'])->name('store');
@@ -288,29 +239,20 @@ Route::middleware('auth')->group(function () {
         Route::get('/{student}/edit', [StudentController::class, 'edit'])->name('edit');
         Route::put('/{student}', [StudentController::class, 'update'])->name('update');
         Route::delete('/{student}', [StudentController::class, 'destroy'])->name('destroy');
-        
-        // Attendance routes
         Route::get('/{student}/attendance', [StudentController::class, 'attendance'])->name('attendance');
-        
-        // AJAX routes
         Route::get('/search', [StudentController::class, 'search'])->name('search');
-        
-        // IMPORT ROUTES
         Route::get('/import', [StudentController::class, 'import'])->name('import');
         Route::post('/import/process', [StudentController::class, 'processImport'])->name('import.process');
-        
-        // EXPORT ROUTES
+        Route::get('/import/template', [StudentController::class, 'downloadTemplate'])->name('import.template');
         Route::get('/export/excel', [StudentController::class, 'exportExcel'])->name('export.excel');
         Route::get('/export/pdf', [StudentController::class, 'exportPdf'])->name('export.pdf');
     });
     
     // =================== AJAX API ROUTES ===================
     Route::prefix('api')->name('api.')->group(function () {
-        // Class API
         Route::get('/classes/{class}/available-students', function($classId) {
             $class = \App\Models\ClassModel::findOrFail($classId);
             $availableStudents = $class->getAvailableStudents();
-            
             return response()->json($availableStudents);
         })->name('classes.available-students');
         
@@ -319,10 +261,8 @@ Route::middleware('auth')->group(function () {
             return response()->json(['count' => $class->students()->count()]);
         })->name('class.student-count');
         
-        // Student API
         Route::get('/students/{student}/details', function($studentId) {
             $student = \App\Models\User::findOrFail($studentId);
-            
             return response()->json([
                 'id' => $student->id,
                 'name' => $student->name,
@@ -332,45 +272,74 @@ Route::middleware('auth')->group(function () {
             ]);
         })->name('students.details');
         
-        // Attendance API
-        Route::get('/attendance/today-stats', [AttendanceController::class, 'getTodayStats'])
-            ->name('attendance.today-stats');
-        
-        // Scan process API
-        Route::post('/attendance/scan-process', [AttendanceController::class, 'scanProcess'])
-            ->name('attendance.scan-process');
+        Route::get('/attendance/today-stats', [AttendanceController::class, 'getTodayStats'])->name('attendance.today-stats');
+        Route::post('/attendance/scan-process', [AttendanceController::class, 'scanProcess'])->name('attendance.scan-process');
     });
-    
-    // =================== DEBUG & UTILITY ROUTES ===================
-    Route::middleware(['role:teacher,guru,admin'])->group(function () {
-        Route::get('/debug/test-attendance/{code}', function($code) {
-            $qrCode = \App\Models\QRCode::where('code', $code)->first();
-            
-            if (!$qrCode) {
-                return "QR Code tidak ditemukan";
-            }
-            
-            return view('debug.test-attendance', compact('qrCode'));
-        });
-        
-        Route::get('/attendance/scan-error', [AttendanceController::class, 'showScanError'])
-            ->name('attendance.scan.error');
-    });
-    
-    // =================== ERROR HANDLING ===================
-    Route::get('/unauthorized', function () {
-        return view('errors.unauthorized');
-    })->name('unauthorized');
     
     // =================== QUICK GENERATE QR ROUTE ===================
     Route::post('/attendance/quick-generate-qr/{classId}', [AttendanceController::class, 'quickGenerateQr'])
         ->name('attendance.quick-generate-qr')
         ->middleware('role:teacher,guru,admin');
+    
+    // =================== DEBUG ROUTES ===================
+    Route::get('/test-qr/{code}', function($code) {
+        $path = storage_path('app/public/qr-codes/' . $code . '.png');
+        if (file_exists($path)) {
+            return response()->file($path);
+        }
+        return "File not found: " . $path;
+    });
+    
+    // =================== API CHART DATA ===================
+    Route::get('/api/attendance/chart-data', function(Request $request) {
+        $user = Auth::user();
+        $period = $request->get('period', 7);
+        $days = (int)$period;
+        
+        $labels = [];
+        $presentData = [];
+        $lateData = [];
+        $absentData = [];
+        
+        for ($i = $days - 1; $i >= 0; $i--) {
+            $date = Carbon::today()->subDays($i);
+            $labels[] = $date->translatedFormat('D, d/m');
+            
+            $attendanceStats = \App\Models\Attendance::whereHas('class', function($q) use ($user) {
+                    $q->where('teacher_id', $user->id);
+                })
+                ->whereDate('attendance_date', $date)
+                ->selectRaw("
+                    SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END) as present,
+                    SUM(CASE WHEN status = 'late' THEN 1 ELSE 0 END) as late,
+                    SUM(CASE WHEN status = 'absent' THEN 1 ELSE 0 END) as absent
+                ")
+                ->first();
+            
+            $presentData[] = $attendanceStats->present ?? 0;
+            $lateData[] = $attendanceStats->late ?? 0;
+            $absentData[] = $attendanceStats->absent ?? 0;
+        }
+        
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'labels' => $labels,
+                'present' => $presentData,
+                'late' => $lateData,
+                'absent' => $absentData,
+            ]
+        ]);
+    })->middleware('auth')->name('api.attendance.chart');
+    
+    // =================== ERROR HANDLING ===================
+    Route::get('/unauthorized', function () {
+        return view('errors.unauthorized');
+    })->name('unauthorized');
 });
 
 // =================== FALLBACK ROUTE ===================
 Route::fallback(function () {
-    // Cek jika request AJAX/API
     if (request()->expectsJson() || request()->is('api/*')) {
         return response()->json([
             'success' => false,
@@ -378,6 +347,11 @@ Route::fallback(function () {
         ], 404);
     }
     
-    // Untuk web request, tampilkan 404
+    // Cek jika request untuk file gambar di storage
+    if (request()->is('storage/*')) {
+        // Biarkan web server menangani file statis
+        abort(404);
+    }
+    
     return response()->view('errors.404', [], 404);
 });

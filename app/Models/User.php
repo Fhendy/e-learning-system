@@ -58,10 +58,14 @@ class User extends Authenticatable
     /**
      * Alias for backward compatibility
      */
-    public function studentClasses()
-    {
-        return $this->classesAsStudent();
-    }
+/**
+ * Get classes where student is enrolled
+ */
+public function studentClasses()
+{
+    return $this->belongsToMany(ClassModel::class, 'class_student', 'student_id', 'class_id')
+        ->withTimestamps();
+}
 
     /**
      * Get first class for backward compatibility

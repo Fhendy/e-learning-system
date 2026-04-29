@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Apr 07, 2026 at 07:24 PM
+-- Generation Time: Apr 29, 2026 at 04:18 PM
 -- Server version: 8.0.30
--- PHP Version: 8.1.10
+-- PHP Version: 8.2.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -88,6 +88,13 @@ CREATE TABLE `attendances` (
   `marked_by` bigint UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `attendances`
+--
+
+INSERT INTO `attendances` (`id`, `student_id`, `class_id`, `qr_code_id`, `attendance_date`, `status`, `checked_in_at`, `checked_out_at`, `notes`, `latitude`, `longitude`, `accuracy`, `ip_address`, `user_agent`, `created_at`, `updated_at`, `marked_by`) VALUES
+(30, 16, 3, 98, '2026-04-18', 'present', '17:55:42', NULL, NULL, '-6.92680000', '109.56420000', NULL, NULL, NULL, '2026-04-18 10:55:42', '2026-04-18 10:55:42', 16);
+
 -- --------------------------------------------------------
 
 --
@@ -114,7 +121,10 @@ CREATE TABLE `classes` (
 --
 
 INSERT INTO `classes` (`id`, `class_name`, `class_code`, `description`, `subject`, `semester`, `academic_year`, `school_year`, `is_active`, `teacher_id`, `created_at`, `updated_at`) VALUES
-(1, 'Matematika Kelas 10', 'MATH-10-A', 'Kelas Matematika untuk Kelas 10', NULL, NULL, NULL, NULL, 1, 2, '2026-04-07 17:35:40', '2026-04-07 17:35:40');
+(1, 'XI PBS', 'XIPBS', '', 'SEJARAH', 'ganjil', NULL, NULL, 1, 2, '2026-04-07 17:35:40', '2026-04-11 04:29:49'),
+(2, 'XI RPL', 'XIRPL', '', 'DKV', 'ganjil', NULL, NULL, 1, 2, '2026-04-09 15:44:52', '2026-04-11 11:25:32'),
+(3, 'DKV XI RPL', 'DKVXIRPL', 'Kelas DKV XI RPL', 'Desain Komunikasi Visual', 'ganjil', '2024/2025', NULL, 1, 2, '2026-04-11 10:42:36', '2026-04-11 17:01:15'),
+(4, 'KK XII RPL', 'KKXIRPL', 'Kelas KK XII RPL', 'Konsentrasi Keahlian', 'ganjil', '2024/2025', NULL, 1, 2, '2026-04-11 10:42:36', '2026-04-11 11:56:10');
 
 -- --------------------------------------------------------
 
@@ -136,8 +146,11 @@ CREATE TABLE `class_student` (
 --
 
 INSERT INTO `class_student` (`id`, `class_id`, `student_id`, `enrolled_at`, `created_at`, `updated_at`) VALUES
-(1, 1, 3, '2026-04-07 17:40:48', '2026-04-07 17:35:40', '2026-04-07 17:35:40'),
-(2, 1, 4, '2026-04-07 17:40:48', '2026-04-07 17:35:40', '2026-04-07 17:35:40');
+(8, 3, 10, NULL, '2026-04-11 10:53:42', '2026-04-11 10:53:42'),
+(9, 3, 11, NULL, '2026-04-11 10:53:42', '2026-04-11 10:53:42'),
+(10, 3, 12, NULL, '2026-04-11 10:53:42', '2026-04-11 10:53:42'),
+(13, 3, 15, NULL, '2026-04-11 10:53:43', '2026-04-11 10:53:43'),
+(14, 3, 16, NULL, '2026-04-11 14:37:36', '2026-04-11 14:37:36');
 
 -- --------------------------------------------------------
 
@@ -267,7 +280,7 @@ CREATE TABLE `qr_codes` (
 --
 
 INSERT INTO `qr_codes` (`id`, `code`, `class_id`, `date`, `start_time`, `end_time`, `duration_minutes`, `location_restricted`, `latitude`, `longitude`, `radius`, `qr_code_image`, `is_active`, `scan_count`, `notes`, `created_by`, `created_at`, `updated_at`) VALUES
-(12, 'AQ7CXHNN', 1, '2026-04-08', '02:13:38', '02:43:38', 30, 0, NULL, NULL, NULL, 'qr-codes/quick-AQ7CXHNN.png', 1, 0, NULL, 2, '2026-04-07 19:13:38', '2026-04-07 19:13:39');
+(98, '93VT2792', 3, '2026-04-18', '17:54:00', '18:54:00', 30, 0, NULL, NULL, NULL, 'qr-codes/93VT2792.png', 1, 1, NULL, 2, '2026-04-18 10:55:33', '2026-04-18 10:55:42');
 
 -- --------------------------------------------------------
 
@@ -319,9 +332,12 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `role`, `is_active`, `nis_nip`, `phone`, `address`, `birth_date`, `profile_image`, `remember_token`, `created_at`, `updated_at`) VALUES
 (1, 'Administrator', 'admin@elearning.com', NULL, '$2y$12$FeafrWuC.QqVE5ufta7OxueJvD0QVry32pu9zDaGkMjq3KzdD3Pzu', 'admin', 1, 'ADM001', NULL, NULL, NULL, NULL, NULL, '2026-04-07 17:35:39', '2026-04-07 17:35:39'),
-(2, 'Guru Contoh', 'teacher@elearning.com', NULL, '$2y$12$XEZdJZ/Id4YlqP9BWQvOv.AHH4aO/pqTYujqIXa05ScHNzntVzATS', 'teacher', 1, 'TCH001', '081234567890', NULL, NULL, NULL, NULL, '2026-04-07 17:35:39', '2026-04-07 17:35:39'),
-(3, 'Siswa 1', 'student1@elearning.com', NULL, '$2y$12$nsTRfo36X8ZLLGNyt461cOs.TU5rBxZmKvXhXhMH0fkEQ9Yw/9vry', 'student', 1, 'STD001', NULL, NULL, NULL, NULL, NULL, '2026-04-07 17:35:40', '2026-04-07 17:35:40'),
-(4, 'Siswa 2', 'student2@elearning.com', NULL, '$2y$12$pO0jlEskn3ZPoiv02pprj.y9IvYK33zW37RoiKXZp5ut79xKETT0u', 'student', 1, 'STD002', NULL, NULL, NULL, NULL, NULL, '2026-04-07 17:35:40', '2026-04-07 17:35:40');
+(2, 'Fhendy S.Kom', 'teacher@elearning.com', NULL, '$2y$12$XEZdJZ/Id4YlqP9BWQvOv.AHH4aO/pqTYujqIXa05ScHNzntVzATS', 'teacher', 1, 'TCH001', '081234567890', NULL, NULL, NULL, NULL, '2026-04-07 17:35:39', '2026-04-09 15:00:36'),
+(10, 'Eko Prasetyo', 'eko.prasetyo05@gmail.com', NULL, '$2y$12$.K6WXDtgJaWB4iDhXIEvc.6KoLdvPaMwrKM6jh8mbL5XeAz2o0mLW', 'student', 1, '2024003', NULL, NULL, NULL, NULL, NULL, '2026-04-11 10:53:42', '2026-04-11 10:53:42'),
+(11, 'Fajar Nugroho', 'fajar.nugroho06@gmail.com', NULL, '$2y$12$gn2jMDXyWc3eXgCd.oJ5sOWtM0gExJPDofPnUrKroovdkGiNdLV5y', 'student', 1, '2024004', NULL, NULL, NULL, NULL, NULL, '2026-04-11 10:53:42', '2026-04-11 10:53:42'),
+(12, 'Gita Sari', 'gita.sari07@gmail.com', NULL, '$2y$12$McPrv/FLpo0tKC0HzmdDeuIECckSTLiraTucTi5Aw.XwprNi2vGVq', 'student', 1, '2024005', NULL, NULL, NULL, NULL, NULL, '2026-04-11 10:53:42', '2026-04-11 10:53:42'),
+(15, 'Joko Susilo', 'joko.susilo10@gmail.com', NULL, '$2y$12$zWxgbFXhP.T7EDMZreEXYucUWCJ3A1loirUQcFORDqDvcq0hRmgdO', 'student', 1, '2024008', NULL, NULL, NULL, NULL, NULL, '2026-04-11 10:53:43', '2026-04-11 10:53:43'),
+(16, 'fhen', 'fhen@gmail.com', NULL, '$2y$12$nIvht133PB9mkzGEsZgHzO7Vi27oZrPngEzNOMXsdL4lUebvJQoSC', 'student', 1, 'F235893', NULL, NULL, NULL, NULL, NULL, '2026-04-11 14:37:36', '2026-04-11 14:37:36');
 
 --
 -- Indexes for dumped tables
@@ -435,7 +451,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `assignments`
 --
 ALTER TABLE `assignments`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `assignment_submissions`
@@ -447,19 +463,19 @@ ALTER TABLE `assignment_submissions`
 -- AUTO_INCREMENT for table `attendances`
 --
 ALTER TABLE `attendances`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `classes`
 --
 ALTER TABLE `classes`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `class_student`
 --
 ALTER TABLE `class_student`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `failed_jobs`
@@ -483,19 +499,19 @@ ALTER TABLE `personal_access_tokens`
 -- AUTO_INCREMENT for table `qr_codes`
 --
 ALTER TABLE `qr_codes`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=99;
 
 --
 -- AUTO_INCREMENT for table `submissions`
 --
 ALTER TABLE `submissions`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- Constraints for dumped tables

@@ -3,18 +3,18 @@
 @section('title', $class->class_name)
 
 @section('content')
-<div class="container-fluid px-0 px-md-3">
+<div class="container-fluid px-3 px-md-4">
     <!-- Page Header -->
-    <div class="page-header mb-6">
-        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-4">
+    <div class="page-header mb-4">
+        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
             <div>
                 <div class="d-flex align-items-center gap-3">
                     <div class="class-icon-large">
                         <i class="bi bi-mortarboard-fill"></i>
                     </div>
                     <div>
-                        <h1 class="page-title">{{ $class->class_name }}</h1>
-                        <p class="page-subtitle text-muted">
+                        <h1 class="page-title mb-1">{{ $class->class_name }}</h1>
+                        <p class="page-subtitle text-muted mb-0">
                             <i class="bi bi-hash me-1"></i>{{ $class->class_code }}
                             @if($class->subject)
                             <span class="mx-2">•</span>
@@ -25,7 +25,7 @@
                 </div>
             </div>
             <div class="d-flex flex-wrap gap-2">
-                @if(auth()->user()->isTeacher() || auth()->user()->isAdmin())
+                @if(in_array(auth()->user()->role, ['teacher', 'admin', 'guru']))
                 <div class="dropdown">
                     <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
                         <i class="bi bi-plus-lg me-2"></i>Tambah
@@ -55,7 +55,7 @@
 
     <!-- Notifications -->
     @if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show mb-6" role="alert">
+    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
         <div class="d-flex align-items-center">
             <i class="bi bi-check-circle-fill me-3 fs-5"></i>
             <div class="flex-grow-1">{{ session('success') }}</div>
@@ -65,7 +65,7 @@
     @endif
 
     @if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show mb-6" role="alert">
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
         <div class="d-flex align-items-center">
             <i class="bi bi-exclamation-triangle-fill me-3 fs-5"></i>
             <div class="flex-grow-1">{{ session('error') }}</div>
@@ -74,126 +74,159 @@
     </div>
     @endif
 
+    @php
+        $totalStudents = $students->total() ?? 0;
+        $presentCount = $attendanceStats['present'] ?? 0;
+        $lateCount = $attendanceStats['late'] ?? 0;
+        $absentCount = $attendanceStats['absent'] ?? 0;
+        $attendanceRate = $attendanceStats['attendance_rate'] ?? 0;
+    @endphp
+
     <!-- Quick Stats -->
-    <div class="stats-grid mb-6">
-        <div class="stats-card">
-            <div class="stats-icon bg-primary-light text-primary">
-                <i class="bi bi-people"></i>
-            </div>
-            <div class="stats-content">
-                <h3 class="stats-value">{{ $students->total() }}</h3>
-                <p class="stats-label">Total Siswa</p>
-            </div>
-        </div>
-
-        <div class="stats-card">
-            <div class="stats-icon bg-success-light text-success">
-                <i class="bi bi-check-circle"></i>
-            </div>
-            <div class="stats-content">
-                <h3 class="stats-value">{{ $attendanceStats['present'] ?? 0 }}</h3>
-                <p class="stats-label">Hadir</p>
+    <div class="row g-2 g-md-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stats-icon bg-primary-light text-primary">
+                        <i class="bi bi-people fs-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="stats-value mb-0">{{ $totalStudents }}</h3>
+                        <p class="stats-label mb-0">Total Siswa</p>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <div class="stats-card">
-            <div class="stats-icon bg-warning-light text-warning">
-                <i class="bi bi-clock-history"></i>
-            </div>
-            <div class="stats-content">
-                <h3 class="stats-value">{{ $attendanceStats['late'] ?? 0 }}</h3>
-                <p class="stats-label">Terlambat</p>
+        <div class="col-6 col-md-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stats-icon bg-success-light text-success">
+                        <i class="bi bi-check-circle fs-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="stats-value mb-0">{{ $presentCount }}</h3>
+                        <p class="stats-label mb-0">Hadir</p>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <div class="stats-card">
-            <div class="stats-icon bg-danger-light text-danger">
-                <i class="bi bi-x-circle"></i>
+        <div class="col-6 col-md-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stats-icon bg-warning-light text-warning">
+                        <i class="bi bi-clock-history fs-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="stats-value mb-0">{{ $lateCount }}</h3>
+                        <p class="stats-label mb-0">Terlambat</p>
+                    </div>
+                </div>
             </div>
-            <div class="stats-content">
-                <h3 class="stats-value">{{ $attendanceStats['absent'] ?? 0 }}</h3>
-                <p class="stats-label">Absen</p>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stats-icon bg-danger-light text-danger">
+                        <i class="bi bi-x-circle fs-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="stats-value mb-0">{{ $absentCount }}</h3>
+                        <p class="stats-label mb-0">Absen</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Class Info & Tabs -->
-    <div class="row">
+    <div class="row g-3 g-md-4">
         <!-- Class Information -->
-        <div class="col-lg-4 mb-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Informasi Kelas</h5>
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-info-circle me-2 text-primary"></i>
+                        Informasi Kelas
+                    </h5>
                 </div>
                 <div class="card-body">
                     <div class="info-list">
                         <div class="info-item">
-                            <i class="bi bi-hash text-primary"></i>
-                            <div>
-                                <small class="text-muted">Kode Kelas</small>
-                                <p class="mb-0">{{ $class->class_code }}</p>
+                            <div class="info-icon">
+                                <i class="bi bi-hash text-primary"></i>
+                            </div>
+                            <div class="info-text">
+                                <div class="info-label">Kode Kelas</div>
+                                <div class="info-value">{{ $class->class_code }}</div>
                             </div>
                         </div>
                         <div class="info-item">
-                            <i class="bi bi-book text-primary"></i>
-                            <div>
-                                <small class="text-muted">Mata Pelajaran</small>
-                                <p class="mb-0">{{ $class->subject ?? '-' }}</p>
+                            <div class="info-icon">
+                                <i class="bi bi-book text-primary"></i>
+                            </div>
+                            <div class="info-text">
+                                <div class="info-label">Mata Pelajaran</div>
+                                <div class="info-value">{{ $class->subject ?? '-' }}</div>
                             </div>
                         </div>
                         <div class="info-item">
-                            <i class="bi bi-person-badge text-primary"></i>
-                            <div>
-                                <small class="text-muted">Wali Kelas</small>
-                                <p class="mb-0">{{ $class->teacher->name ?? 'Belum ada guru' }}</p>
+                            <div class="info-icon">
+                                <i class="bi bi-person-badge text-primary"></i>
+                            </div>
+                            <div class="info-text">
+                                <div class="info-label">Wali Kelas</div>
+                                <div class="info-value">{{ $class->teacher->name ?? 'Belum ada guru' }}</div>
                             </div>
                         </div>
                         <div class="info-item">
-                            <i class="bi bi-calendar3 text-primary"></i>
-                            <div>
-                                <small class="text-muted">Tahun Ajaran</small>
-                                <p class="mb-0">{{ $class->school_year ?? '-' }}</p>
+                            <div class="info-icon">
+                                <i class="bi bi-calendar3 text-primary"></i>
+                            </div>
+                            <div class="info-text">
+                                <div class="info-label">Tahun Ajaran</div>
+                                <div class="info-value">{{ $class->school_year ?? $class->academic_year ?? '-' }}</div>
                             </div>
                         </div>
                         <div class="info-item">
-                            <i class="bi bi-calendar-range text-primary"></i>
-                            <div>
-                                <small class="text-muted">Semester</small>
-                                <p class="mb-0">{{ $class->semester ?? '-' }}</p>
+                            <div class="info-icon">
+                                <i class="bi bi-calendar-range text-primary"></i>
+                            </div>
+                            <div class="info-text">
+                                <div class="info-label">Semester</div>
+                                <div class="info-value">{{ $class->semester ?? '-' }}</div>
                             </div>
                         </div>
                         <div class="info-item">
-                            <i class="bi bi-power text-primary"></i>
-                            <div>
-                                <small class="text-muted">Status</small>
-                                <p class="mb-0">
+                            <div class="info-icon">
+                                <i class="bi bi-power text-primary"></i>
+                            </div>
+                            <div class="info-text">
+                                <div class="info-label">Status</div>
+                                <div class="info-value">
                                     @if($class->is_active)
-                                    <span class="badge bg-success">Aktif</span>
+                                        <span class="badge bg-success">Aktif</span>
                                     @else
-                                    <span class="badge bg-secondary">Nonaktif</span>
+                                        <span class="badge bg-secondary">Nonaktif</span>
                                     @endif
-                                </p>
+                                </div>
                             </div>
                         </div>
                     </div>
                     
                     @if($class->description)
-                    <div class="mt-4">
-                        <h6 class="mb-2">Deskripsi</h6>
-                        <p class="text-muted mb-0">{{ $class->description }}</p>
+                    <div class="mt-4 pt-3 border-top">
+                        <div class="info-label mb-2">Deskripsi</div>
+                        <p class="mb-0 small text-muted">{{ $class->description }}</p>
                     </div>
                     @endif
                     
-                    <div class="mt-4">
-                        <div class="attendance-progress">
-                            <div class="d-flex justify-content-between mb-1">
-                                <small>Kehadiran</small>
-                                <small>{{ $attendanceStats['attendance_rate'] ?? 0 }}%</small>
-                            </div>
-                            <div class="progress" style="height: 6px;">
-                                <div class="progress-bar bg-success" 
-                                     style="width: {{ $attendanceStats['attendance_rate'] ?? 0 }}%"></div>
-                            </div>
+                    <div class="mt-4 pt-3 border-top">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small text-muted">Kehadiran Keseluruhan</span>
+                            <span class="small fw-semibold">{{ $attendanceRate }}%</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" style="width: {{ $attendanceRate }}%"></div>
                         </div>
                     </div>
                 </div>
@@ -202,43 +235,43 @@
 
         <!-- Tabs Content -->
         <div class="col-lg-8">
-            <div class="card">
-                <div class="card-header">
+            <div class="card h-100">
+                <div class="card-header bg-white p-0 p-md-3">
                     <ul class="nav nav-tabs card-header-tabs" id="classTabs" role="tablist">
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active" id="students-tab" data-bs-toggle="tab" 
                                     data-bs-target="#students" type="button" role="tab">
-                                <i class="bi bi-people me-2"></i>
-                                Siswa
-                                <span class="badge bg-primary rounded-pill ms-1">{{ $students->total() }}</span>
+                                <i class="bi bi-people me-1 me-md-2"></i>
+                                <span>Siswa</span>
+                                <span class="badge bg-primary rounded-pill ms-1">{{ $totalStudents }}</span>
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="assignments-tab" data-bs-toggle="tab" 
                                     data-bs-target="#assignments" type="button" role="tab">
-                                <i class="bi bi-journal-text me-2"></i>
-                                Tugas
+                                <i class="bi bi-journal-text me-1 me-md-2"></i>
+                                <span>Tugas</span>
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="attendance-tab" data-bs-toggle="tab" 
                                     data-bs-target="#attendance" type="button" role="tab">
-                                <i class="bi bi-calendar-check me-2"></i>
-                                Absensi
+                                <i class="bi bi-calendar-check me-1 me-md-2"></i>
+                                <span>Absensi</span>
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="qrcodes-tab" data-bs-toggle="tab" 
                                     data-bs-target="#qrcodes" type="button" role="tab">
-                                <i class="bi bi-qr-code me-2"></i>
-                                QR Codes
+                                <i class="bi bi-qr-code me-1 me-md-2"></i>
+                                <span>QR Codes</span>
                             </button>
                         </li>
                     </ul>
                 </div>
                 
-                <div class="card-body">
-                    <div class="tab-content" id="classTabsContent">
+                <div class="card-body p-0">
+                    <div class="tab-content">
                         <!-- Students Tab -->
                         <div class="tab-pane fade show active" id="students" role="tabpanel">
                             @if($students->count() > 0)
@@ -246,55 +279,52 @@
                                 <table class="table table-hover mb-0">
                                     <thead>
                                         <tr>
-                                            <th class="ps-4">NAMA SISWA</th>
-                                            <th>KEHADIRAN</th>
-                                            <th class="text-end pe-4">AKSI</th>
+                                            <th class="ps-3 ps-md-4">SISWA</th>
+                                            <th class="text-center">KEHADIRAN</th>
+                                            <th class="text-end pe-3 pe-md-4">AKSI</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach($students as $student)
+                                        @php
+                                            $total = $student->attendances_count ?? 0;
+                                            $present = $student->present_count ?? 0;
+                                            $late = $student->late_count ?? 0;
+                                            $attended = $present + $late;
+                                            $percentage = $total > 0 ? round(($attended / $total) * 100) : 0;
+                                        @endphp
                                         <tr>
-                                            <td class="ps-4">
-                                                <div class="d-flex align-items-center gap-3">
+                                            <td class="ps-3 ps-md-4">
+                                                <div class="d-flex align-items-center gap-2 gap-md-3">
                                                     <div class="student-avatar">
                                                         {{ strtoupper(substr($student->name, 0, 1)) }}
                                                     </div>
                                                     <div>
-                                                        <h6 class="mb-1">{{ $student->name }}</h6>
-                                                        <div class="text-muted small">
-                                                            {{ $student->nis_nip }} • {{ $student->email }}
-                                                        </div>
+                                                        <div class="fw-semibold mb-1">{{ $student->name }}</div>
+                                                        <div class="text-muted small">{{ $student->nis_nip }}</div>
                                                     </div>
                                                 </div>
-                                            </td>
-                                            <td>
-                                                @php
-                                                    $total = $student->attendances_count;
-                                                    $present = $student->present_count;
-                                                    $late = $student->late_count;
-                                                    $absent = $student->absent_count;
-                                                    $attended = $present + $late;
-                                                    $percentage = $total > 0 ? round(($attended / $total) * 100) : 0;
-                                                @endphp
-                                                <div class="attendance-bar">
+                                              </td>
+                                            <td class="text-center" style="min-width: 100px;">
+                                                <div>
                                                     <div class="d-flex justify-content-between mb-1">
-                                                        <small>{{ $attended }}/{{ $total }}</small>
-                                                        <small>{{ $percentage }}%</small>
+                                                        <small class="text-muted">{{ $attended }}/{{ $total }}</small>
+                                                        <small class="fw-semibold">{{ $percentage }}%</small>
                                                     </div>
-                                                    <div class="progress" style="height: 4px;">
+                                                    <div class="progress" style="height: 5px;">
                                                         <div class="progress-bar bg-success" style="width: {{ $percentage }}%"></div>
                                                     </div>
                                                 </div>
-                                            </td>
-                                            <td class="pe-4">
+                                              </td>
+                                            <td class="text-end pe-3 pe-md-4">
                                                 <div class="d-flex justify-content-end gap-1">
                                                     <a href="{{ route('students.show', $student) }}" 
                                                        class="btn btn-icon btn-sm" 
                                                        data-bs-toggle="tooltip" 
-                                                       title="Detail">
+                                                       title="Detail Siswa">
                                                         <i class="bi bi-eye"></i>
                                                     </a>
-                                                    @if(auth()->user()->isTeacher() || auth()->user()->isAdmin())
+                                                    @if(in_array(auth()->user()->role, ['teacher', 'admin', 'guru']))
                                                     <div class="dropdown">
                                                         <button class="btn btn-icon btn-sm" 
                                                                 type="button" 
@@ -302,41 +332,39 @@
                                                             <i class="bi bi-three-dots-vertical"></i>
                                                         </button>
                                                         <div class="dropdown-menu dropdown-menu-end">
-                                                            <a href="{{ route('students.edit', $student) }}" 
-                                                               class="dropdown-item">
-                                                                <i class="bi bi-pencil me-2"></i>
-                                                                Edit
+                                                            <a href="{{ route('students.edit', $student) }}" class="dropdown-item">
+                                                                <i class="bi bi-pencil me-2"></i>Edit
                                                             </a>
                                                             <div class="dropdown-divider"></div>
                                                             <button type="button" 
                                                                     class="dropdown-item text-danger"
                                                                     data-bs-toggle="modal" 
                                                                     data-bs-target="#removeStudentModal{{ $student->id }}">
-                                                                <i class="bi bi-person-dash me-2"></i>
-                                                                Keluarkan
+                                                                <i class="bi bi-person-dash me-2"></i>Keluarkan
                                                             </button>
                                                         </div>
                                                     </div>
                                                     @endif
                                                 </div>
-                                            </td>
+                                              </td>
                                         </tr>
                                         @endforeach
                                     </tbody>
                                 </table>
                             </div>
                             
-            
+                            <div class="p-3 border-top">
+                                {{ $students->appends(request()->query())->links('vendor.pagination.bootstrap-5') }}
+                            </div>
                             @else
                             <div class="empty-state text-center py-5">
-                                <div class="empty-state-icon">
-                                    <i class="bi bi-people"></i>
+                                <div class="empty-icon mb-3">
+                                    <i class="bi bi-people fs-1 text-muted"></i>
                                 </div>
-                                <h5>Belum ada siswa</h5>
+                                <h5 class="mb-2">Belum ada siswa</h5>
                                 <p class="text-muted mb-4">Tambahkan siswa pertama ke kelas ini</p>
                                 <a href="{{ route('students.create') }}?class_id={{ $class->id }}" class="btn btn-primary">
-                                    <i class="bi bi-person-plus me-2"></i>
-                                    Tambah Siswa
+                                    <i class="bi bi-person-plus me-2"></i>Tambah Siswa
                                 </a>
                             </div>
                             @endif
@@ -344,52 +372,51 @@
 
                         <!-- Assignments Tab -->
                         <div class="tab-pane fade" id="assignments" role="tabpanel">
-                            @if($assignments->count() > 0)
-                            <div class="assignment-list">
+                            @if(isset($assignments) && $assignments->count() > 0)
+                            <div class="p-3">
                                 @foreach($assignments as $assignment)
-                                <div class="assignment-card">
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <div>
+                                <div class="assignment-card mb-3">
+                                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start gap-3">
+                                        <div class="flex-grow-1">
                                             <h6 class="mb-1">{{ $assignment->title }}</h6>
-                                            <p class="text-muted small mb-2">{{ Str::limit($assignment->description, 100) }}</p>
-                                            <div class="d-flex align-items-center gap-3">
+                                            <p class="text-muted small mb-2">{{ Str::limit($assignment->description, 80) }}</p>
+                                            <div class="d-flex flex-wrap align-items-center gap-3">
                                                 <span class="badge bg-info">
                                                     <i class="bi bi-calendar me-1"></i>
-                                                    {{ $assignment->due_date->format('d/m/Y H:i') }}
+                                                    {{ \Carbon\Carbon::parse($assignment->due_date)->format('d/m/Y H:i') }}
                                                 </span>
                                                 <span class="text-muted small">
                                                     <i class="bi bi-journal-check me-1"></i>
-                                                    {{ $assignment->submissions_count }}/{{ $students->total() }}
+                                                    {{ $assignment->submissions_count ?? 0 }}/{{ $totalStudents }}
                                                 </span>
                                             </div>
                                         </div>
                                         <div>
                                             <a href="{{ route('assignments.show', $assignment) }}" 
-                                               class="btn btn-sm btn-outline-primary">
+                                               class="btn btn-sm btn-outline-primary w-100 w-sm-auto">
                                                 Detail
                                             </a>
                                         </div>
                                     </div>
                                 </div>
                                 @endforeach
-                            </div>
-                            <div class="mt-4 text-center">
-                                <a href="{{ route('assignments.teacher.index') }}?class_id={{ $class->id }}" 
-                                   class="btn btn-outline-primary">
-                                    Lihat Semua Tugas
-                                </a>
+                                <div class="text-center mt-3 pt-2 border-top">
+                                    <a href="{{ route('assignments.teacher.index') }}?class_id={{ $class->id }}" 
+                                       class="btn btn-outline-primary">
+                                        Lihat Semua Tugas
+                                    </a>
+                                </div>
                             </div>
                             @else
                             <div class="empty-state text-center py-5">
-                                <div class="empty-state-icon">
-                                    <i class="bi bi-journal-text"></i>
+                                <div class="empty-icon mb-3">
+                                    <i class="bi bi-journal-text fs-1 text-muted"></i>
                                 </div>
-                                <h5>Belum ada tugas</h5>
+                                <h5 class="mb-2">Belum ada tugas</h5>
                                 <p class="text-muted mb-4">Buat tugas pertama untuk kelas ini</p>
                                 <a href="{{ route('assignments.teacher.create') }}?class_id={{ $class->id }}" 
                                    class="btn btn-primary">
-                                    <i class="bi bi-journal-plus me-2"></i>
-                                    Buat Tugas
+                                    <i class="bi bi-journal-plus me-2"></i>Buat Tugas
                                 </a>
                             </div>
                             @endif
@@ -397,86 +424,83 @@
 
                         <!-- Attendance Tab -->
                         <div class="tab-pane fade" id="attendance" role="tabpanel">
-                            <div class="attendance-stats mb-4">
-                                <h6 class="mb-3">Statistik Kehadiran</h6>
-                                <div class="row text-center">
-                                    <div class="col-6 col-md-3 mb-3">
-                                        <div class="stat-card bg-success-light">
-                                            <div class="stat-value text-success">{{ $attendanceStats['present'] ?? 0 }}</div>
-                                            <div class="stat-label">Hadir</div>
+                            <div class="p-3">
+                                <div class="row g-2 g-md-3 mb-4">
+                                    <div class="col-6 col-md-3">
+                                        <div class="stat-mini bg-success-light text-center p-3 rounded">
+                                            <div class="stat-mini-value text-success fw-bold fs-2">{{ $presentCount }}</div>
+                                            <div class="stat-mini-label text-muted small">Hadir</div>
                                         </div>
                                     </div>
-                                    <div class="col-6 col-md-3 mb-3">
-                                        <div class="stat-card bg-warning-light">
-                                            <div class="stat-value text-warning">{{ $attendanceStats['late'] ?? 0 }}</div>
-                                            <div class="stat-label">Terlambat</div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="stat-mini bg-warning-light text-center p-3 rounded">
+                                            <div class="stat-mini-value text-warning fw-bold fs-2">{{ $lateCount }}</div>
+                                            <div class="stat-mini-label text-muted small">Terlambat</div>
                                         </div>
                                     </div>
-                                    <div class="col-6 col-md-3 mb-3">
-                                        <div class="stat-card bg-danger-light">
-                                            <div class="stat-value text-danger">{{ $attendanceStats['absent'] ?? 0 }}</div>
-                                            <div class="stat-label">Absen</div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="stat-mini bg-danger-light text-center p-3 rounded">
+                                            <div class="stat-mini-value text-danger fw-bold fs-2">{{ $absentCount }}</div>
+                                            <div class="stat-mini-label text-muted small">Absen</div>
                                         </div>
                                     </div>
-                                    <div class="col-6 col-md-3 mb-3">
-                                        <div class="stat-card bg-primary-light">
-                                            <div class="stat-value text-primary">{{ $attendanceStats['attendance_rate'] ?? 0 }}%</div>
-                                            <div class="stat-label">Rata-rata</div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="stat-mini bg-primary-light text-center p-3 rounded">
+                                            <div class="stat-mini-value text-primary fw-bold fs-2">{{ $attendanceRate }}%</div>
+                                            <div class="stat-mini-label text-muted small">Rata-rata</div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            
-                            <div class="quick-actions">
-                                <h6 class="mb-3">Aksi Cepat</h6>
-                                <div class="d-flex flex-wrap gap-2">
-                                    <a href="{{ route('attendance.manual') }}?class_id={{ $class->id }}" 
-                                       class="btn btn-outline-primary">
-                                        <i class="bi bi-pencil-square me-2"></i>
-                                        Input Manual
-                                    </a>
-                                    <a href="{{ route('qr-codes.create') }}?class_id={{ $class->id }}" 
-                                       class="btn btn-outline-success">
-                                        <i class="bi bi-qr-code me-2"></i>
-                                        Buat QR Code
-                                    </a>
-                                    <a href="{{ route('attendance.teacher.index') }}?class_id={{ $class->id }}" 
-                                       class="btn btn-outline-info">
-                                        <i class="bi bi-calendar-check me-2"></i>
-                                        Detail Absensi
-                                    </a>
+                                
+                                <div class="mt-4 pt-3 border-top">
+                                    <h6 class="mb-3">Aksi Cepat</h6>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <a href="{{ route('attendance.teacher.manual.create') }}" class="btn btn-primary">
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-pencil-square me-2"></i>Input Manual
+                                        </a>
+                                        <a href="{{ route('qr-codes.create') }}?class_id={{ $class->id }}" 
+                                           class="btn btn-outline-success btn-sm">
+                                            <i class="bi bi-qr-code me-2"></i>Buat QR Code
+                                        </a>
+                                        <a href="{{ route('attendance.teacher.index') }}?class_id={{ $class->id }}" 
+                                           class="btn btn-outline-info btn-sm">
+                                            <i class="bi bi-calendar-check me-2"></i>Detail Absensi
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- QR Codes Tab -->
                         <div class="tab-pane fade" id="qrcodes" role="tabpanel">
-                            @if($recentQrCodes->count() > 0)
+                            @if(isset($recentQrCodes) && $recentQrCodes->count() > 0)
                             <div class="table-responsive">
                                 <table class="table table-hover mb-0">
                                     <thead>
                                         <tr>
-                                            <th>TANGGAL</th>
+                                            <th class="ps-3 ps-md-4">TANGGAL</th>
                                             <th>WAKTU</th>
                                             <th>STATUS</th>
-                                            <th class="text-end">AKSI</th>
+                                            <th class="text-end pe-3 pe-md-4">AKSI</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach($recentQrCodes as $qrCode)
                                         <tr>
-                                            <td>{{ $qrCode->date->format('d/m/Y') }}</td>
+                                            <td class="ps-3 ps-md-4">{{ \Carbon\Carbon::parse($qrCode->date)->format('d/m/Y') }}</td>
                                             <td>{{ $qrCode->start_time }} - {{ $qrCode->end_time }}</td>
                                             <td>
                                                 @if($qrCode->is_active)
-                                                <span class="badge bg-success">Aktif</span>
+                                                    <span class="badge bg-success">Aktif</span>
                                                 @else
-                                                <span class="badge bg-secondary">Nonaktif</span>
+                                                    <span class="badge bg-secondary">Nonaktif</span>
                                                 @endif
                                             </td>
-                                            <td class="text-end">
+                                            <td class="text-end pe-3 pe-md-4">
                                                 <a href="{{ route('qr-codes.show', $qrCode) }}" 
-                                                   class="btn btn-icon btn-sm">
+                                                   class="btn btn-icon btn-sm"
+                                                   title="Detail QR Code">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
                                             </td>
@@ -485,7 +509,7 @@
                                     </tbody>
                                 </table>
                             </div>
-                            <div class="mt-4 text-center">
+                            <div class="text-center p-3 border-top">
                                 <a href="{{ route('qr-codes.index') }}?class_id={{ $class->id }}" 
                                    class="btn btn-outline-primary">
                                     Lihat Semua QR Code
@@ -493,15 +517,14 @@
                             </div>
                             @else
                             <div class="empty-state text-center py-5">
-                                <div class="empty-state-icon">
-                                    <i class="bi bi-qr-code"></i>
+                                <div class="empty-icon mb-3">
+                                    <i class="bi bi-qr-code fs-1 text-muted"></i>
                                 </div>
-                                <h5>Belum ada QR Code</h5>
+                                <h5 class="mb-2">Belum ada QR Code</h5>
                                 <p class="text-muted mb-4">Buat QR Code untuk absensi kelas</p>
                                 <a href="{{ route('qr-codes.create') }}?class_id={{ $class->id }}" 
                                    class="btn btn-primary">
-                                    <i class="bi bi-qr-code me-2"></i>
-                                    Buat QR Code
+                                    <i class="bi bi-qr-code me-2"></i>Buat QR Code
                                 </a>
                             </div>
                             @endif
@@ -516,32 +539,30 @@
 <!-- Remove Student Modals -->
 @foreach($students as $student)
 <div class="modal fade" id="removeStudentModal{{ $student->id }}" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header border-0 pb-0">
                 <h5 class="modal-title">Konfirmasi</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <div class="text-center mb-4">
-                    <div class="student-avatar-lg mb-3">
-                        {{ strtoupper(substr($student->name, 0, 1)) }}
-                    </div>
-                    <h6>{{ $student->name }}</h6>
-                    <p class="text-muted mb-0">{{ $student->nis_nip }}</p>
+            <div class="modal-body text-center pt-0">
+                <div class="student-avatar-lg mx-auto mb-3">
+                    {{ strtoupper(substr($student->name, 0, 1)) }}
                 </div>
-                <p class="text-center">Apakah Anda yakin ingin mengeluarkan <strong>{{ $student->name }}</strong> dari kelas <strong>{{ $class->class_name }}</strong>?</p>
-                <div class="alert alert-info small">
+                <h6 class="mb-1">{{ $student->name }}</h6>
+                <p class="text-muted small mb-3">{{ $student->nis_nip }}</p>
+                <p class="mb-3">Yakin ingin mengeluarkan <strong>{{ $student->name }}</strong> dari kelas <strong>{{ $class->class_name }}</strong>?</p>
+                <div class="alert alert-info small mb-0">
                     <i class="bi bi-info-circle me-2"></i>
-                    Data absensi dan tugas siswa di kelas ini akan tetap tersimpan.
+                    Data absensi dan tugas akan tetap tersimpan.
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
                 <form action="{{ route('classes.remove-student', [$class, $student]) }}" method="POST">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Keluarkan</button>
+                    <button type="submit" class="btn btn-danger btn-sm">Keluarkan</button>
                 </form>
             </div>
         </div>
@@ -550,68 +571,59 @@
 @endforeach
 
 <style>
+/* CSS Variables */
 :root {
-    --primary-color: #4f46e5;
+    --primary: #4f46e5;
     --primary-light: #e0e7ff;
-    --success-color: #10b981;
+    --success: #10b981;
     --success-light: #d1fae5;
-    --warning-color: #f59e0b;
+    --warning: #f59e0b;
     --warning-light: #fef3c7;
-    --danger-color: #ef4444;
+    --danger: #ef4444;
     --danger-light: #fee2e2;
-    --info-color: #06b6d4;
+    --info: #06b6d4;
     --info-light: #cffafe;
     --border-radius: 12px;
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    --transition: all 0.2s ease;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
 }
 
 /* Page Header */
 .page-header {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
 }
 
 .page-title {
-    font-size: 1.75rem;
+    font-size: clamp(1.25rem, 5vw, 1.5rem);
     font-weight: 700;
     color: #1f2937;
-    margin-bottom: 0.25rem;
 }
 
 .page-subtitle {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     color: #6b7280;
 }
 
 .class-icon-large {
-    width: 64px;
-    height: 64px;
-    border-radius: 16px;
-    background: linear-gradient(135deg, var(--primary-color), #7c3aed);
+    width: clamp(44px, 10vw, 56px);
+    height: clamp(44px, 10vw, 56px);
+    border-radius: 14px;
+    background: linear-gradient(135deg, #4f46e5, #3730a3);
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: clamp(1.25rem, 3vw, 1.5rem);
+    flex-shrink: 0;
 }
 
-/* Stats Grid */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
+/* Stats Cards */
 .stats-card {
     background: white;
     border-radius: var(--border-radius);
-    padding: 1.25rem;
-    box-shadow: var(--shadow-sm);
+    padding: 0.875rem;
     border: 1px solid #e5e7eb;
-    transition: var(--transition);
+    transition: all 0.2s ease;
 }
 
 .stats-card:hover {
@@ -626,28 +638,23 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.25rem;
-    margin-bottom: 0.75rem;
 }
 
 .stats-value {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: #1f2937;
-    margin: 0;
-    line-height: 1;
 }
 
 .stats-label {
+    font-size: 0.688rem;
     color: #6b7280;
-    font-size: 0.875rem;
-    margin: 0.25rem 0 0;
 }
 
-/* Card Styles */
+/* Card */
 .card {
-    border: none;
-    box-shadow: var(--shadow-sm);
+    background: white;
+    border: 1px solid #e5e7eb;
     border-radius: var(--border-radius);
     overflow: hidden;
 }
@@ -655,13 +662,14 @@
 .card-header {
     background: white;
     border-bottom: 1px solid #e5e7eb;
-    padding: 1rem 1.25rem;
+    padding: 0.875rem 1rem;
 }
 
 .card-title {
     font-weight: 600;
     color: #1f2937;
     margin: 0;
+    font-size: 0.938rem;
 }
 
 /* Info List */
@@ -677,13 +685,30 @@
     gap: 0.75rem;
 }
 
-.info-item i {
-    font-size: 1.125rem;
-    margin-top: 0.125rem;
+.info-icon {
+    width: 28px;
+    flex-shrink: 0;
 }
 
-.info-item small {
-    font-size: 0.75rem;
+.info-icon i {
+    font-size: 1rem;
+    color: #4f46e5;
+}
+
+.info-text {
+    flex: 1;
+}
+
+.info-label {
+    font-size: 0.688rem;
+    color: #6b7280;
+    margin-bottom: 0.125rem;
+}
+
+.info-value {
+    font-size: 0.813rem;
+    font-weight: 500;
+    color: #1f2937;
 }
 
 /* Student Avatar */
@@ -691,7 +716,7 @@
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary-color), #7c3aed);
+    background: linear-gradient(135deg, #4f46e5, #3730a3);
     color: white;
     display: flex;
     align-items: center;
@@ -702,10 +727,10 @@
 }
 
 .student-avatar-lg {
-    width: 64px;
-    height: 64px;
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary-color), #7c3aed);
+    background: linear-gradient(135deg, #4f46e5, #3730a3);
     color: white;
     display: flex;
     align-items: center;
@@ -715,90 +740,94 @@
     margin: 0 auto;
 }
 
-/* Table Styles */
+/* Table */
 .table {
     margin: 0;
 }
 
 .table thead th {
     font-weight: 600;
-    font-size: 0.75rem;
+    font-size: 0.688rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     color: #6b7280;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem;
     border-bottom: 1px solid #e5e7eb;
     background: #f9fafb;
 }
 
 .table tbody td {
-    padding: 1rem;
+    padding: 0.875rem;
     border-bottom: 1px solid #f3f4f6;
     vertical-align: middle;
-}
-
-.table tbody tr:last-child td {
-    border-bottom: none;
 }
 
 .table tbody tr:hover {
     background-color: #f9fafb;
 }
 
-/* Attendance Bar */
-.attendance-bar {
-    min-width: 120px;
+/* Progress */
+.progress {
+    border-radius: 4px;
+    background: #e5e7eb;
+    overflow: hidden;
 }
 
-/* Assignment List */
-.assignment-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+.progress-bar {
+    background: #10b981;
 }
 
+/* Assignment Card */
 .assignment-card {
-    background: white;
+    background: #f8fafc;
     border: 1px solid #e5e7eb;
     border-radius: 10px;
-    padding: 1rem;
-    transition: var(--transition);
+    padding: 0.875rem;
+    transition: all 0.2s ease;
 }
 
 .assignment-card:hover {
-    border-color: var(--primary-color);
+    border-color: #4f46e5;
     box-shadow: var(--shadow-sm);
 }
 
-/* Attendance Stats */
-.stat-card {
+/* Stat Mini */
+.stat-mini {
+    background: #f8fafc;
     border-radius: 10px;
-    padding: 1rem;
-    text-align: center;
+    transition: all 0.2s ease;
 }
 
-.stat-value {
+.stat-mini:hover {
+    transform: translateY(-2px);
+}
+
+.stat-mini-value {
     font-size: 1.5rem;
     font-weight: 700;
-    margin-bottom: 0.25rem;
 }
 
-.stat-label {
-    font-size: 0.875rem;
-    color: #6b7280;
+.stat-mini-label {
+    font-size: 0.688rem;
 }
 
 /* Buttons */
 .btn {
     border-radius: 8px;
     font-weight: 500;
-    padding: 0.5rem 1rem;
-    transition: var(--transition);
+    padding: 0.375rem 0.875rem;
+    font-size: 0.813rem;
+    transition: all 0.2s ease;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.625rem;
+    font-size: 0.75rem;
 }
 
 .btn-icon {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     padding: 0;
     display: inline-flex;
     align-items: center;
@@ -811,227 +840,245 @@
 
 .btn-icon:hover {
     background: #f9fafb;
-    color: var(--primary-color);
+    color: #4f46e5;
     border-color: #d1d5db;
 }
 
-/* Empty State */
-.empty-state {
-    padding: 3rem 1rem;
+.btn-outline-secondary {
+    border-color: #e5e7eb;
+    color: #6b7280;
 }
 
-.empty-state-icon {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 1.5rem;
+.btn-outline-secondary:hover {
     background: #f9fafb;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2rem;
-    color: #9ca3af;
+    border-color: #d1d5db;
+    color: #374151;
 }
 
-.empty-state h5 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #1f2937;
-    margin-bottom: 0.5rem;
+.btn-primary {
+    background: #4f46e5;
+    border-color: #4f46e5;
+}
+
+.btn-primary:hover {
+    background: #4338ca;
+    border-color: #4338ca;
+}
+
+/* Badge */
+.badge {
+    font-size: 0.688rem;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
 }
 
 /* Tabs */
 .nav-tabs {
     border-bottom: 1px solid #e5e7eb;
-    gap: 0.5rem;
+    gap: 0.25rem;
+    padding: 0 0.5rem;
 }
 
 .nav-tabs .nav-link {
     border: none;
     border-radius: 8px 8px 0 0;
-    padding: 0.75rem 1rem;
+    padding: 0.625rem 0.875rem;
     color: #6b7280;
     font-weight: 500;
+    font-size: 0.813rem;
     display: flex;
     align-items: center;
+    gap: 0.375rem;
 }
 
 .nav-tabs .nav-link:hover {
-    color: var(--primary-color);
+    color: #4f46e5;
     background: #f9fafb;
 }
 
 .nav-tabs .nav-link.active {
-    color: var(--primary-color);
+    color: #4f46e5;
     background: white;
-    border-bottom: 2px solid var(--primary-color);
+    border-bottom: 2px solid #4f46e5;
 }
 
-/* Progress */
-.progress {
-    border-radius: 4px;
-    background: #f3f4f6;
+/* Empty State */
+.empty-state {
+    padding: 2rem 1rem;
+}
+
+.empty-icon {
+    width: 64px;
+    height: 64px;
+    background: #f9fafb;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.empty-state h5 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.empty-state p {
+    font-size: 0.813rem;
+    color: #6b7280;
 }
 
 /* Dropdown */
 .dropdown-menu {
-    border: none;
-    box-shadow: var(--shadow-lg);
+    background: white;
+    border: 1px solid #e5e7eb;
     border-radius: 8px;
-    padding: 0.5rem;
-    min-width: 160px;
+    padding: 0.375rem;
+    min-width: 150px;
 }
 
 .dropdown-item {
     border-radius: 6px;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.813rem;
     display: flex;
     align-items: center;
+    gap: 0.5rem;
+    color: #1f2937;
 }
 
 .dropdown-item:hover {
     background: #f9fafb;
 }
 
-/* Modal */
-.modal-content {
-    border: none;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-lg);
+.dropdown-item.text-danger:hover {
+    background: #fee2e2;
 }
 
+/* Modal */
+.modal-content {
+    background: white;
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+}
+
+/* Alert */
+.alert-info {
+    background: #cffafe;
+    border-color: #06b6d4;
+    color: #155e75;
+}
+
+/* Border */
+.border-top {
+    border-top: 1px solid #e5e7eb !important;
+}
+
+/* Colors */
+.bg-primary-light { background: #e0e7ff; }
+.bg-success-light { background: #d1fae5; }
+.bg-warning-light { background: #fef3c7; }
+.bg-danger-light { background: #fee2e2; }
+.bg-info-light { background: #cffafe; }
+
+.text-primary { color: #4f46e5 !important; }
+.text-success { color: #10b981 !important; }
+.text-warning { color: #f59e0b !important; }
+.text-danger { color: #ef4444 !important; }
+
 /* Responsive */
+@media (min-width: 992px) {
+    .stats-icon {
+        width: 44px;
+        height: 44px;
+    }
+    
+    .stats-value {
+        font-size: 1.375rem;
+    }
+    
+    .nav-tabs .nav-link {
+        padding: 0.75rem 1.25rem;
+        font-size: 0.875rem;
+    }
+}
+
 @media (max-width: 768px) {
-    .container-fluid {
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
+    .stats-card {
+        padding: 0.75rem;
     }
     
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
+    .stats-icon {
+        width: 32px;
+        height: 32px;
     }
     
-    .page-header .d-flex {
-        flex-direction: column;
-        align-items: stretch;
+    .stats-icon i {
+        font-size: 0.875rem;
     }
     
-    .class-icon-large {
-        width: 48px;
-        height: 48px;
-        font-size: 1.25rem;
+    .stats-value {
+        font-size: 1rem;
     }
     
     .table thead th,
     .table tbody td {
-        padding: 0.75rem;
+        padding: 0.625rem;
     }
     
     .student-avatar {
         width: 32px;
         height: 32px;
-    }
-    
-    .nav-tabs .nav-link {
-        padding: 0.5rem 0.75rem;
-        font-size: 0.875rem;
-    }
-}
-
-/* Dark Mode Support */
-@media (prefers-color-scheme: dark) {
-    .stats-card,
-    .card,
-    .modal-content {
-        background: #1f2937;
-        border-color: #374151;
-    }
-    
-    .page-title,
-    .card-title,
-    .stats-value,
-    .table tbody h6 {
-        color: #f9fafb;
-    }
-    
-    .page-subtitle,
-    .text-muted {
-        color: #9ca3af;
-    }
-    
-    .table thead th {
-        background: #111827;
-        border-color: #374151;
-        color: #9ca3af;
-    }
-    
-    .table tbody td {
-        border-color: #374151;
-        color: #e5e7eb;
-    }
-    
-    .table tbody tr:hover {
-        background: #111827;
-    }
-    
-    .btn-icon {
-        background: #374151;
-        border-color: #4b5563;
-        color: #9ca3af;
-    }
-    
-    .btn-icon:hover {
-        background: #4b5563;
-        color: #e5e7eb;
-    }
-    
-    .dropdown-menu {
-        background: #1f2937;
-        border: 1px solid #374151;
-    }
-    
-    .dropdown-item {
-        color: #e5e7eb;
-    }
-    
-    .dropdown-item:hover {
-        background: #374151;
-    }
-    
-    .empty-state-icon {
-        background: #374151;
-        color: #6b7280;
-    }
-    
-    .progress {
-        background: #374151;
+        font-size: 0.75rem;
     }
     
     .nav-tabs {
-        border-color: #374151;
+        gap: 0.125rem;
+        padding: 0;
     }
     
     .nav-tabs .nav-link {
-        color: #9ca3af;
+        padding: 0.5rem 0.625rem;
+        font-size: 0.75rem;
     }
     
-    .nav-tabs .nav-link:hover {
-        background: #374151;
-        color: #e5e7eb;
+    .btn-icon {
+        width: 28px;
+        height: 28px;
+    }
+}
+
+@media (max-width: 576px) {
+    .info-item {
+        flex-direction: column;
+        gap: 0.25rem;
     }
     
-    .nav-tabs .nav-link.active {
-        background: #1f2937;
-        color: var(--primary-color);
-        border-color: var(--primary-color);
+    .info-icon {
+        width: auto;
+    }
+    
+    .assignment-card .d-flex {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .assignment-card .btn {
+        width: 100%;
+    }
+    
+    .table-responsive {
+        border: none;
     }
 }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Tab functionality
+    // Tab functionality with localStorage
     const triggerTabList = [].slice.call(document.querySelectorAll('#classTabs button'));
     triggerTabList.forEach(function (triggerEl) {
         const tabTrigger = new bootstrap.Tab(triggerEl);
@@ -1040,25 +1087,27 @@ document.addEventListener('DOMContentLoaded', function() {
             event.preventDefault();
             tabTrigger.show();
             
-            // Save active tab to localStorage
             const activeTab = triggerEl.getAttribute('data-bs-target');
-            localStorage.setItem('activeClassTab', activeTab);
+            if (activeTab) {
+                localStorage.setItem('activeClassTab', activeTab);
+            }
         });
     });
     
-    // Restore active tab from localStorage
+    // Restore active tab
     const activeTab = localStorage.getItem('activeClassTab');
     if (activeTab) {
         const triggerEl = document.querySelector(`[data-bs-target="${activeTab}"]`);
         if (triggerEl) {
-            bootstrap.Tab.getInstance(triggerEl)?.show();
+            const tab = bootstrap.Tab.getInstance(triggerEl);
+            if (tab) tab.show();
         }
     }
     
     // Initialize tooltips
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function(tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
+    tooltipTriggerList.forEach(function(tooltipTriggerEl) {
+        new bootstrap.Tooltip(tooltipTriggerEl);
     });
 });
 </script>

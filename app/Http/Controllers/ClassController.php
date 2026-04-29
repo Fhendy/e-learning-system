@@ -15,6 +15,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class ClassController extends Controller
 {
@@ -104,6 +107,13 @@ class ClassController extends Controller
         }
         
         if ($validator->fails()) {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validasi gagal',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
@@ -151,6 +161,14 @@ class ClassController extends Controller
                 'teacher_id' => $class->teacher_id
             ]);
             
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Kelas berhasil dibuat!',
+                    'data' => $class
+                ]);
+            }
+            
             return redirect()->route('classes.show', $class->id)
                 ->with('success', 'Kelas berhasil dibuat! Kode Kelas: ' . $class->class_code);
             
@@ -162,6 +180,13 @@ class ClassController extends Controller
                 'user_id' => $user->id,
                 'request' => $request->all()
             ]);
+            
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal membuat kelas: ' . $e->getMessage()
+                ], 500);
+            }
             
             return redirect()->back()
                 ->with('error', 'Gagal membuat kelas: ' . $e->getMessage())
@@ -363,6 +388,13 @@ class ClassController extends Controller
             }
             
             if ($validator->fails()) {
+                if (request()->ajax() || request()->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Validasi gagal',
+                        'errors' => $validator->errors()
+                    ], 422);
+                }
                 return back()
                     ->withErrors($validator)
                     ->withInput();
@@ -404,6 +436,14 @@ class ClassController extends Controller
                 'updated_by' => $user->id
             ]);
             
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Kelas berhasil diperbarui!',
+                    'data' => $class
+                ]);
+            }
+            
             return redirect()->route('classes.show', $class)
                 ->with('success', 'Kelas berhasil diperbarui!');
             
@@ -413,6 +453,13 @@ class ClassController extends Controller
                 'class_id' => $id,
                 'user_id' => $user->id
             ]);
+            
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+                ], 500);
+            }
             
             return back()
                 ->withInput()
@@ -463,6 +510,13 @@ class ClassController extends Controller
                 'deleted_by' => $user->id
             ]);
             
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Kelas berhasil dihapus.'
+                ]);
+            }
+            
             return redirect()->route('classes.index')
                 ->with('success', 'Kelas berhasil dihapus.');
             
@@ -474,6 +528,13 @@ class ClassController extends Controller
                 'class_id' => $id,
                 'user_id' => $user->id
             ]);
+            
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal menghapus kelas: ' . $e->getMessage()
+                ], 500);
+            }
             
             return back()->with('error', 'Gagal menghapus kelas: ' . $e->getMessage());
         }
@@ -502,11 +563,23 @@ class ClassController extends Controller
 
             // Check if student is already in class
             if ($class->students()->where('users.id', $student->id)->exists()) {
+                if (request()->ajax() || request()->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Siswa sudah terdaftar di kelas ini.'
+                    ], 422);
+                }
                 return back()->with('error', 'Siswa sudah terdaftar di kelas ini.');
             }
 
             // Check if user is a student
             if ($student->role !== 'student') {
+                if (request()->ajax() || request()->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'User bukan siswa.'
+                    ], 422);
+                }
                 return back()->with('error', 'User bukan siswa.');
             }
 
@@ -518,6 +591,14 @@ class ClassController extends Controller
                 'student_id' => $student->id,
                 'added_by' => $user->id
             ]);
+            
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Siswa berhasil ditambahkan ke kelas.',
+                    'data' => $student
+                ]);
+            }
 
             return back()->with('success', 'Siswa berhasil ditambahkan ke kelas.');
 
@@ -527,6 +608,13 @@ class ClassController extends Controller
                 'class_id' => $id,
                 'user_id' => $user->id
             ]);
+            
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal menambahkan siswa: ' . $e->getMessage()
+                ], 500);
+            }
             
             return back()->with('error', 'Gagal menambahkan siswa: ' . $e->getMessage());
         }
@@ -550,6 +638,12 @@ class ClassController extends Controller
             
             // Check if student is in this class
             if (!$class->students()->where('users.id', $student->id)->exists()) {
+                if (request()->ajax() || request()->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Siswa tidak terdaftar di kelas ini.'
+                    ], 422);
+                }
                 return back()->with('error', 'Siswa tidak terdaftar di kelas ini.');
             }
             
@@ -562,6 +656,13 @@ class ClassController extends Controller
                 'removed_by' => $user->id
             ]);
             
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Siswa berhasil dikeluarkan dari kelas.'
+                ]);
+            }
+            
             return back()->with('success', 'Siswa berhasil dikeluarkan dari kelas.');
             
         } catch (\Exception $e) {
@@ -571,6 +672,13 @@ class ClassController extends Controller
                 'student_id' => $studentId,
                 'user_id' => $user->id
             ]);
+            
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal mengeluarkan siswa: ' . $e->getMessage()
+                ], 500);
+            }
             
             return back()->with('error', 'Gagal mengeluarkan siswa: ' . $e->getMessage());
         }
@@ -649,6 +757,315 @@ class ClassController extends Controller
             
             return redirect()->route('classes.show', $id)
                 ->with('error', 'Gagal memuat dashboard: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show import form for classes
+     */
+    public function import()
+    {
+        return view('classes.import');
+    }
+
+    /**
+     * Download template Excel for classes
+     */
+    public function downloadTemplate()
+    {
+        try {
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            
+            // Set headers
+            $sheet->setCellValue('A1', 'Nama Kelas');
+            $sheet->setCellValue('B1', 'Kode Kelas');
+            $sheet->setCellValue('C1', 'Mata Pelajaran');
+            $sheet->setCellValue('D1', 'Semester');
+            $sheet->setCellValue('E1', 'Tahun Ajaran');
+            $sheet->setCellValue('F1', 'Deskripsi');
+            
+            // Style headers
+            $headerStyle = [
+                'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '4F46E5']],
+                'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER]
+            ];
+            $sheet->getStyle('A1:F1')->applyFromArray($headerStyle);
+            
+            // Set column widths
+            $sheet->getColumnDimension('A')->setWidth(30);
+            $sheet->getColumnDimension('B')->setWidth(20);
+            $sheet->getColumnDimension('C')->setWidth(30);
+            $sheet->getColumnDimension('D')->setWidth(15);
+            $sheet->getColumnDimension('E')->setWidth(15);
+            $sheet->getColumnDimension('F')->setWidth(50);
+            
+            // Add example data
+            $sheet->setCellValue('A2', 'Matematika X IPA 1');
+            $sheet->setCellValue('B2', 'M-XIPA1');
+            $sheet->setCellValue('C2', 'Matematika');
+            $sheet->setCellValue('D2', 'ganjil');
+            $sheet->setCellValue('E2', '2024/2025');
+            $sheet->setCellValue('F2', 'Kelas Matematika untuk jurusan IPA');
+            
+            $sheet->setCellValue('A3', 'Fisika XI IPA 2');
+            $sheet->setCellValue('B3', 'F-XIPA2');
+            $sheet->setCellValue('C3', 'Fisika');
+            $sheet->setCellValue('D3', 'genap');
+            $sheet->setCellValue('E3', '2024/2025');
+            $sheet->setCellValue('F3', 'Kelas Fisika tingkat lanjut');
+            
+            // Add instruction sheet
+            $instructionSheet = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, 'Petunjuk');
+            $spreadsheet->addSheet($instructionSheet, 0);
+            $instructionSheet->setCellValue('A1', 'PANDUAN IMPORT DATA KELAS');
+            $instructionSheet->setCellValue('A2', '================================');
+            $instructionSheet->setCellValue('A4', 'Kolom yang wajib diisi:');
+            $instructionSheet->setCellValue('A5', '1. Nama Kelas - Nama lengkap kelas');
+            $instructionSheet->setCellValue('A6', '2. Kode Kelas - Kode unik kelas (wajib unik)');
+            $instructionSheet->setCellValue('A8', 'Kolom opsional:');
+            $instructionSheet->setCellValue('A9', '3. Mata Pelajaran - Mata pelajaran yang diajarkan');
+            $instructionSheet->setCellValue('A10', '4. Semester - Ganjil / Genap');
+            $instructionSheet->setCellValue('A11', '5. Tahun Ajaran - Format: YYYY/YYYY (contoh: 2024/2025)');
+            $instructionSheet->setCellValue('A12', '6. Deskripsi - Deskripsi singkat tentang kelas');
+            $instructionSheet->setCellValue('A14', 'Catatan:');
+            $instructionSheet->setCellValue('A15', '- Jika Semester kosong, akan menggunakan default dari form');
+            $instructionSheet->setCellValue('A16', '- Jika Tahun Ajaran kosong, akan menggunakan default dari form');
+            $instructionSheet->setCellValue('A17', '- Kode kelas harus unik (tidak boleh sama dengan yang sudah ada)');
+            
+            $instructionSheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+            $instructionSheet->getColumnDimension('A')->setWidth(60);
+            
+            // Set active sheet to data
+            $spreadsheet->setActiveSheetIndex(1);
+            
+            // Create writer
+            $writer = new Xlsx($spreadsheet);
+            
+            // Set headers for download
+            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header('Content-Disposition: attachment;filename="template_kelas.xlsx"');
+            header('Cache-Control: max-age=0');
+            
+            $writer->save('php://output');
+            exit();
+            
+        } catch (\Exception $e) {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal membuat template: ' . $e->getMessage()
+                ], 500);
+            }
+            return redirect()->back()->with('error', 'Gagal membuat template: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Activate the specified class.
+     */
+    public function activate(ClassModel $class)
+    {
+        $user = Auth::user();
+        
+        // Check authorization
+        if ($class->teacher_id !== $user->id && $user->role !== 'admin') {
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki izin untuk mengaktifkan kelas ini.'
+                ], 403);
+            }
+            abort(403, 'Unauthorized action.');
+        }
+        
+        $class->update(['is_active' => true]);
+        
+        // Check if request is AJAX
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Kelas berhasil diaktifkan.',
+                'data' => [
+                    'class_id' => $class->id,
+                    'class_name' => $class->class_name,
+                    'is_active' => $class->is_active
+                ]
+            ]);
+        }
+        
+        // Hapus redirect with success message untuk AJAX
+        return redirect()->back();
+    }
+
+    /**
+     * Deactivate the specified class.
+     */
+    public function deactivate(ClassModel $class)
+    {
+        $user = Auth::user();
+        
+        // Check authorization
+        if ($class->teacher_id !== $user->id && $user->role !== 'admin') {
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki izin untuk menonaktifkan kelas ini.'
+                ], 403);
+            }
+            abort(403, 'Unauthorized action.');
+        }
+        
+        $class->update(['is_active' => false]);
+        
+        // Check if request is AJAX
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Kelas berhasil dinonaktifkan.',
+                'data' => [
+                    'class_id' => $class->id,
+                    'class_name' => $class->class_name,
+                    'is_active' => $class->is_active
+                ]
+            ]);
+        }
+        
+        // Hapus redirect with success message untuk AJAX
+        return redirect()->back();
+    }
+
+    /**
+     * Process import Excel file for classes
+     */
+    public function processImport(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:5120',
+            'default_semester' => 'nullable|in:ganjil,genap',
+            'default_academic_year' => 'nullable|string|max:20',
+        ]);
+        
+        try {
+            $file = $request->file('file');
+            $spreadsheet = IOFactory::load($file);
+            $worksheet = $spreadsheet->getActiveSheet();
+            $rows = $worksheet->toArray();
+            
+            // Remove header row
+            array_shift($rows);
+            
+            $successCount = 0;
+            $errorCount = 0;
+            $errors = [];
+            $defaultSemester = $request->default_semester;
+            $defaultAcademicYear = $request->default_academic_year;
+            
+            foreach ($rows as $index => $row) {
+                try {
+                    $className = trim($row[0] ?? '');
+                    $classCode = trim($row[1] ?? '');
+                    $subject = trim($row[2] ?? '');
+                    $semester = trim($row[3] ?? '');
+                    $academicYear = trim($row[4] ?? '');
+                    $description = trim($row[5] ?? '');
+                    
+                    // Skip empty rows
+                    if (empty($className) && empty($classCode)) {
+                        continue;
+                    }
+                    
+                    // Validate required fields
+                    if (empty($className)) {
+                        $errors[] = "Baris " . ($index + 2) . ": Nama Kelas wajib diisi";
+                        $errorCount++;
+                        continue;
+                    }
+                    
+                    if (empty($classCode)) {
+                        $errors[] = "Baris " . ($index + 2) . ": Kode Kelas wajib diisi";
+                        $errorCount++;
+                        continue;
+                    }
+                    
+                    // Use default values if empty
+                    if (empty($semester) && $defaultSemester) {
+                        $semester = $defaultSemester;
+                    }
+                    
+                    if (empty($academicYear) && $defaultAcademicYear) {
+                        $academicYear = $defaultAcademicYear;
+                    }
+                    
+                    // Validate semester if provided
+                    if (!empty($semester) && !in_array($semester, ['ganjil', 'genap'])) {
+                        $errors[] = "Baris " . ($index + 2) . ": Semester harus 'ganjil' atau 'genap'";
+                        $errorCount++;
+                        continue;
+                    }
+                    
+                    // Check if class already exists
+                    $existingClass = ClassModel::where('class_code', $classCode)->first();
+                    
+                    if ($existingClass && $request->has('skip_duplicates')) {
+                        continue;
+                    }
+                    
+                    if ($existingClass) {
+                        $errors[] = "Baris " . ($index + 2) . ": Kode Kelas {$classCode} sudah ada";
+                        $errorCount++;
+                        continue;
+                    }
+                    
+                    // Create class
+                    ClassModel::create([
+                        'class_name' => $className,
+                        'class_code' => strtoupper($classCode),
+                        'subject' => $subject,
+                        'semester' => $semester,
+                        'academic_year' => $academicYear,
+                        'description' => $description,
+                        'is_active' => $request->has('auto_activate'),
+                        'teacher_id' => auth()->id(),
+                    ]);
+                    
+                    $successCount++;
+                    
+                } catch (\Exception $e) {
+                    $errors[] = "Baris " . ($index + 2) . ": " . $e->getMessage();
+                    $errorCount++;
+                }
+            }
+            
+            $message = "Import selesai! Berhasil: {$successCount} kelas, Gagal: {$errorCount} kelas.";
+            
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => $successCount > 0,
+                    'message' => $message,
+                    'data' => [
+                        'success_count' => $successCount,
+                        'error_count' => $errorCount,
+                        'errors' => $errors
+                    ]
+                ]);
+            }
+            
+            if ($successCount > 0) {
+                return redirect()->route('classes.index')->with('success', $message);
+            } else {
+                return redirect()->back()->with('error', $message)->with('import_errors', $errors);
+            }
+            
+        } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal import file: ' . $e->getMessage()
+                ], 500);
+            }
+            return redirect()->back()->with('error', 'Gagal import file: ' . $e->getMessage());
         }
     }
 }

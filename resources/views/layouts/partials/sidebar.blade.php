@@ -1,5 +1,4 @@
 <!-- Overlay untuk mobile -->
- 
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <nav class="sidebar" id="sidebar">
@@ -10,7 +9,7 @@
                 <span class="brand-name">E-Learning</span>
             </a>
         </div>
-        <button class="sidebar-close" id="sidebarClose">
+        <button class="sidebar-close" id="sidebarClose" aria-label="Close Sidebar">
             <i class="bi bi-x-lg"></i>
         </button>
     </div>
@@ -24,7 +23,7 @@
             </a>
         </div>
 
-        @if(auth()->user()->role == 'teacher')
+        @if(in_array(auth()->user()->role, ['teacher', 'admin', 'guru']))
         <!-- Menu Guru -->
         <div class="sidebar-item">
             <a href="{{ route('classes.index') }}" class="sidebar-link {{ request()->routeIs('classes.*') ? 'active' : '' }}">
@@ -91,7 +90,7 @@
         </div>
         
         <div class="sidebar-item">
-            <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form-sidebar').submit();" class="sidebar-link text-danger">
+            <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form-sidebar').submit();" class="sidebar-link text-danger">
                 <i class="bi bi-box-arrow-right"></i>
                 <span>Logout</span>
             </a>
@@ -109,174 +108,177 @@
 </nav>
 
 <style>
-    
-/* SIDEBAR STYLES */
+/* Sidebar Styles - Warna putih konsisten */
 .sidebar {
     position: fixed;
     top: 0;
     left: 0;
     width: 280px;
     height: 100vh;
-    background: #4f46e5;
-    background: linear-gradient(180deg, #4f46e5 0%, #3730a3 100%);
-    color: white;
-    z-index: 990; /* DIBAWAH HEADER (1000) */
+    background: #ffffff !important;
+    color: #1e293b;
+    z-index: 1040;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    overflow-x: hidden;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
 }
 
-/* Desktop: Sidebar selalu tampil */
+.sidebar.active {
+    transform: translateX(0);
+}
+
 @media (min-width: 992px) {
     .sidebar {
-        transform: translateX(0) !important;
-        position: fixed;
+        transform: translateX(0);
     }
 }
 
-/* Mobile: Sidebar hidden by default */
 @media (max-width: 991px) {
     .sidebar {
-        transform: translateX(-100%);
-        transition: transform 0.3s ease;
-        top: 70px; /* TURUNKAN KE BAWAH HEADER */
-        height: calc(100vh - 70px); /* KURANGI TINGGI DENGAN HEADER */
-    }
-    
-    .sidebar.active {
-        transform: translateX(0);
+        width: 280px;
+        top: 0;
+        height: 100vh;
     }
 }
 
 /* Sidebar Header */
 .sidebar-header {
-    padding: 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #e5e7eb;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: linear-gradient(180deg, #4f46e5 0%, #3730a3 100%);
-}
-
-/* Di mobile, sidebar header harus tetap visible */
-@media (max-width: 991px) {
-    .sidebar-header {
-        padding: 15px 20px;
-        position: sticky;
-        top: 0;
-        z-index: 1;
-        background: linear-gradient(180deg, #4f46e5 0%, #3730a3 100%);
-    }
+    min-height: 70px;
 }
 
 .sidebar-brand a {
     display: flex;
     align-items: center;
-    color: white;
+    gap: 0.75rem;
+    color: #4f46e5;
     text-decoration: none;
-    font-size: 1.2rem;
-    font-weight: 600;
-    gap: 10px;
+    font-size: 1.25rem;
+    font-weight: 700;
 }
 
 .sidebar-brand i {
     font-size: 1.5rem;
 }
 
-/* Close Button (Mobile Only) */
 .sidebar-close {
     display: none;
-    background: none;
+    background: #f1f5f9;
     border: none;
-    color: white;
-    font-size: 1.5rem;
-    cursor: pointer;
-    width: 40px;
-    height: 40px;
+    color: #64748b;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
+    cursor: pointer;
     align-items: center;
     justify-content: center;
-    z-index: 1001; /* DI ATAS HEADER */
 }
 
 @media (max-width: 991px) {
     .sidebar-close {
         display: flex;
     }
-    
-    .sidebar-close:hover {
-        background: rgba(255, 255, 255, 0.1);
-    }
 }
 
 /* Sidebar Menu */
 .sidebar-menu {
     flex: 1;
-    padding: 15px 0;
+    padding: 1rem 0;
     overflow-y: auto;
 }
 
-/* Sidebar Items */
 .sidebar-item {
-    padding: 0 15px;
-    margin-bottom: 5px;
+    padding: 0 1rem;
+    margin-bottom: 0.25rem;
 }
 
 .sidebar-link {
     display: flex;
     align-items: center;
-    padding: 12px 15px;
-    color: rgba(255, 255, 255, 0.9);
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: #475569;
     text-decoration: none;
-    border-radius: 8px;
-    transition: background-color 0.2s;
+    border-radius: 0.75rem;
+    transition: all 0.2s ease;
 }
 
 .sidebar-link:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
+    background: #f1f5f9;
+    color: #4f46e5;
 }
 
 .sidebar-link.active {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
+    background: #eef2ff;
+    color: #4f46e5;
     font-weight: 600;
 }
 
 .sidebar-link i {
-    margin-right: 12px;
-    font-size: 1.1rem;
-    width: 20px;
-    text-align: center;
+    font-size: 1.25rem;
+    width: 1.5rem;
 }
 
-/* Badge */
 .sidebar-link .badge {
-    font-size: 0.7rem;
-    padding: 3px 6px;
+    font-size: 0.688rem;
+    padding: 0.25rem 0.5rem;
     margin-left: auto;
 }
 
-/* Divider */
+.sidebar-link.text-danger {
+    color: #ef4444;
+}
+
+.sidebar-link.text-danger:hover {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+/* Sidebar Divider */
 .sidebar-divider {
     height: 1px;
-    background: rgba(255, 255, 255, 0.1);
-    margin: 15px;
+    background: #e5e7eb;
+    margin: 1rem 1.25rem;
 }
 
 /* Sidebar Footer */
 .sidebar-footer {
-    padding: 15px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    border-top: 1px solid #e5e7eb;
     text-align: center;
 }
 
 .sidebar-version small {
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 0.8rem;
+    color: #94a3b8;
+    font-size: 0.75rem;
 }
 
-/* Overlay untuk Mobile */
+/* Scrollbar */
+.sidebar::-webkit-scrollbar,
+.sidebar-menu::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar::-webkit-scrollbar-track,
+.sidebar-menu::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+.sidebar::-webkit-scrollbar-thumb,
+.sidebar-menu::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+/* Overlay */
 .sidebar-overlay {
     position: fixed;
     top: 0;
@@ -284,7 +286,7 @@
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
-    z-index: 989; /* DIBAWAH SIDEBAR */
+    z-index: 1035;
     display: none;
 }
 
@@ -292,110 +294,37 @@
     display: block;
 }
 
-/* Pastikan konten utama ada di bawah header */
-@media (max-width: 991px) {
-    body {
-        padding-top: 70px; /* Offset untuk header fixed */
+@media (min-width: 992px) {
+    .sidebar-overlay {
+        display: none !important;
+    }
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    .sidebar {
+        width: 260px;
     }
     
-    .app-container {
-        margin-top: 0;
+    .sidebar-header {
+        padding: 0.875rem 1rem;
     }
     
-    .main-content {
-        margin-top: 70px;
-        min-height: calc(100vh - 70px);
+    .sidebar-brand a {
+        font-size: 1.125rem;
     }
     
-    .page-content {
-        padding-top: 0;
+    .sidebar-brand i {
+        font-size: 1.25rem;
+    }
+    
+    .sidebar-link {
+        padding: 0.625rem 0.875rem;
+        font-size: 0.875rem;
+    }
+    
+    .sidebar-link i {
+        font-size: 1.125rem;
     }
 }
-
-/* Scrollbar untuk sidebar */
-.sidebar-menu::-webkit-scrollbar {
-    width: 5px;
-}
-
-.sidebar-menu::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.sidebar-menu::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 10px;
-}
-
-/* Z-index hierarchy: */
-/* 1. Header: 1000 */
-/* 2. Sidebar close button: 1001 */
-/* 3. Sidebar: 990 */
-/* 4. Overlay: 989 */
 </style>
-
-<script>
-// SIMPLE SIDEBAR TOGGLE FOR MOBILE
-document.addEventListener('DOMContentLoaded', function() {
-    const sidebar = document.getElementById('sidebar');
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    const sidebarClose = document.getElementById('sidebarClose');
-    const sidebarOverlay = document.getElementById('sidebarOverlay');
-    
-    // Fungsi buka sidebar
-    function openSidebar() {
-        if (sidebar) sidebar.classList.add('active');
-        if (sidebarOverlay) sidebarOverlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-    
-    // Fungsi tutup sidebar
-    function closeSidebar() {
-        if (sidebar) sidebar.classList.remove('active');
-        if (sidebarOverlay) sidebarOverlay.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-    
-    // Event Listeners
-    if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', openSidebar);
-    }
-    
-    if (sidebarClose) {
-        sidebarClose.addEventListener('click', closeSidebar);
-    }
-    
-    if (sidebarOverlay) {
-        sidebarOverlay.addEventListener('click', closeSidebar);
-    }
-    
-    // Tutup sidebar saat klik link (mobile only)
-    const sidebarLinks = document.querySelectorAll('.sidebar-link');
-    sidebarLinks.forEach(link => {
-        link.addEventListener('click', function() {
-            if (window.innerWidth < 992) {
-                // Khusus logout, tampilkan konfirmasi
-                if (this.classList.contains('text-danger')) {
-                    if (!confirm('Apakah Anda yakin ingin logout?')) {
-                        return;
-                    }
-                }
-                closeSidebar();
-            }
-        });
-    });
-    
-    // Tutup sidebar dengan ESC key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeSidebar();
-        }
-    });
-    
-    // Auto-close saat resize ke desktop
-    window.addEventListener('resize', function() {
-        if (window.innerWidth >= 992) {
-            closeSidebar();
-        }
-    });
-});
-</script>

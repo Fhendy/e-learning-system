@@ -3,15 +3,22 @@
 @section('title', 'Kelola Siswa')
 
 @section('content')
-<div class="container-fluid px-0 px-md-3">
+<div class="container-fluid px-3 px-md-4">
     <!-- Page Header -->
-    <div class="page-header mb-6">
-        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-4">
+    <div class="page-header mb-4">
+        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
             <div>
-                <h1 class="page-title">Kelola Siswa</h1>
-                <p class="page-subtitle text-muted">
-                    Kelola data siswa dan kehadiran mereka
-                </p>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="page-icon-large">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <div>
+                        <h1 class="page-title mb-1">Kelola Siswa</h1>
+                        <p class="page-subtitle text-muted mb-0">
+                            Kelola data siswa dan kehadiran mereka
+                        </p>
+                    </div>
+                </div>
             </div>
             <div class="d-flex flex-wrap gap-2">
                 <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#importModal">
@@ -25,13 +32,13 @@
     </div>
 
     <!-- Filter & Search -->
-    <div class="card mb-6">
+    <div class="card mb-4">
         <div class="card-body">
             <form method="GET" action="{{ route('students.index') }}" class="filter-form">
                 <div class="row g-3">
                     <div class="col-md-5">
-                        <div class="input-group input-group-search">
-                            <span class="input-group-text">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">
                                 <i class="bi bi-search"></i>
                             </span>
                             <input type="text" class="form-control" 
@@ -72,27 +79,30 @@
 
     <!-- Students Table -->
     <div class="card">
-        <div class="card-header">
+        <div class="card-header bg-white">
             <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
                 <div>
-                    <h5 class="card-title mb-1">Daftar Siswa</h5>
-                    <p class="card-subtitle text-muted">
+                    <h5 class="card-title mb-1">
+                        <i class="bi bi-table me-2"></i>
+                        Daftar Siswa
+                    </h5>
+                    <p class="card-subtitle text-muted mb-0">
                         {{ $students->total() }} siswa ditemukan
                     </p>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <button class="btn btn-sm btn-outline-secondary" id="refreshBtn" title="Refresh">
+                    <button class="btn btn-icon btn-sm" id="refreshBtn" title="Refresh">
                         <i class="bi bi-arrow-clockwise"></i>
                     </button>
                     <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
                             <i class="bi bi-download me-1"></i>Export
                         </button>
                         <div class="dropdown-menu dropdown-menu-end">
-                            <a href="#" class="dropdown-item">
+                            <a href="{{ route('students.export.excel') }}" class="dropdown-item">
                                 <i class="bi bi-file-earmark-excel me-2"></i>Excel
                             </a>
-                            <a href="#" class="dropdown-item">
+                            <a href="{{ route('students.export.pdf') }}" class="dropdown-item">
                                 <i class="bi bi-file-earmark-pdf me-2"></i>PDF
                             </a>
                         </div>
@@ -106,40 +116,38 @@
             <table class="table table-hover mb-0">
                 <thead>
                     <tr>
-                        <th class="ps-4">SISWA</th>
+                        <th class="ps-3 ps-md-4">SISWA</th>
                         <th>KONTAK</th>
                         <th>KELAS</th>
                         <th>STATUS</th>
-                        <th class="text-end pe-4">AKSI</th>
+                        <th class="text-end pe-3 pe-md-4">AKSI</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($students as $student)
-                    <tr>
-                        <td class="ps-4">
+                    <tr class="student-row">
+                        <td class="ps-3 ps-md-4">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="student-avatar">
-                                    {{ strtoupper(substr($student->name, 0, 2)) }}
+                                    {{ strtoupper(substr($student->name, 0, 1)) }}
                                 </div>
                                 <div>
                                     <h6 class="mb-1">{{ $student->name }}</h6>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <code class="student-nis">{{ $student->nis_nip }}</code>
-                                    </div>
+                                    <code class="student-nis">{{ $student->nis_nip }}</code>
                                 </div>
                             </div>
                         </td>
                         <td>
-                            <div class="student-contact">
-                                <div class="text-truncate" style="max-width: 200px;">
-                                    <i class="bi bi-envelope me-1 text-muted"></i>
-                                    {{ $student->email }}
+                            <div>
+                                <div class="d-flex align-items-center gap-1 text-muted small">
+                                    <i class="bi bi-envelope"></i>
+                                    <span>{{ Str::limit($student->email, 25) }}</span>
                                 </div>
                                 @if($student->phone)
-                                <small class="text-muted">
-                                    <i class="bi bi-phone me-1"></i>
-                                    {{ $student->phone }}
-                                </small>
+                                <div class="d-flex align-items-center gap-1 text-muted small mt-1">
+                                    <i class="bi bi-phone"></i>
+                                    <span>{{ $student->phone }}</span>
+                                </div>
                                 @endif
                             </div>
                         </td>
@@ -170,45 +178,27 @@
                             </span>
                             @endif
                         </td>
-                        <td class="pe-4">
-                            <div class="d-flex justify-content-end gap-1">
+                        <td class="text-end pe-3 pe-md-4">
+                            <div class="btn-group" role="group">
                                 <a href="{{ route('students.show', $student) }}" 
-                                   class="btn btn-icon btn-sm" 
+                                   class="btn btn-sm btn-outline-primary" 
                                    data-bs-toggle="tooltip" 
-                                   title="Detail">
+                                   title="Detail Siswa">
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 <a href="{{ route('students.edit', $student) }}" 
-                                   class="btn btn-icon btn-sm" 
+                                   class="btn btn-sm btn-outline-warning" 
                                    data-bs-toggle="tooltip" 
-                                   title="Edit">
+                                   title="Edit Siswa">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <div class="dropdown">
-                                    <button class="btn btn-icon btn-sm" 
-                                            type="button" 
-                                            data-bs-toggle="dropdown">
-                                        <i class="bi bi-three-dots-vertical"></i>
-                                    </button>
-                                    <div class="dropdown-menu dropdown-menu-end">
-                                        <a href="#" class="dropdown-item">
-                                            <i class="bi bi-calendar-check me-2"></i>
-                                            Absensi
-                                        </a>
-                                        <a href="#" class="dropdown-item">
-                                            <i class="bi bi-journal-text me-2"></i>
-                                            Nilai
-                                        </a>
-                                        <div class="dropdown-divider"></div>
-                                        <button type="button" 
-                                                class="dropdown-item text-danger"
-                                                data-bs-toggle="modal" 
-                                                data-bs-target="#deleteModal{{ $student->id }}">
-                                            <i class="bi bi-trash me-2"></i>
-                                            Hapus
-                                        </button>
-                                    </div>
-                                </div>
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-danger" 
+                                        data-bs-toggle="tooltip" 
+                                        title="Hapus Siswa"
+                                        onclick="confirmDelete({{ $student->id }}, '{{ addslashes($student->name) }}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -219,27 +209,28 @@
 
         <!-- Pagination -->
         @if ($students->hasPages())
-        <div class="card-footer">
+        <div class="card-footer bg-white">
             <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
                 <div>
                     <p class="mb-0 text-muted small">
-                        Menampilkan <strong>{{ $students->firstItem() ?? 0 }}-{{ $students->lastItem() ?? 0 }}</strong> 
+                        Menampilkan <strong>{{ $students->firstItem() ?? 0 }}</strong> 
+                        sampai <strong>{{ $students->lastItem() ?? 0 }}</strong> 
                         dari <strong>{{ $students->total() }}</strong> siswa
                     </p>
                 </div>
                 <nav aria-label="Page navigation">
-                    {{ $students->links('vendor.pagination.custom') }}
+                    {{ $students->appends(request()->query())->links('vendor.pagination.bootstrap-5') }}
                 </nav>
             </div>
         </div>
         @endif
 
         @else
-        <div class="empty-state">
-            <div class="empty-state-icon">
-                <i class="bi bi-person"></i>
+        <div class="empty-state text-center py-5">
+            <div class="empty-icon mx-auto mb-3">
+                <i class="bi bi-person fs-1 text-muted"></i>
             </div>
-            <h5>Belum ada siswa</h5>
+            <h5 class="mb-2">Belum ada siswa</h5>
             <p class="text-muted mb-4">Mulai dengan menambahkan siswa pertama</p>
             <a href="{{ route('students.create') }}" class="btn btn-primary">
                 <i class="bi bi-person-plus me-2"></i>
@@ -254,118 +245,170 @@
 <div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header border-0 pb-0">
                 <h5 class="modal-title">
                     <i class="bi bi-upload me-2"></i>
                     Import Siswa
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <div class="text-center mb-4">
-                    <div class="import-icon mb-3">
-                        <i class="bi bi-file-earmark-excel"></i>
+            <form action="{{ route('students.import.process') }}" method="POST" enctype="multipart/form-data" id="importForm">
+                @csrf
+                <div class="modal-body pt-0">
+                    <div class="text-center mb-4">
+                        <div class="import-icon mx-auto mb-3">
+                            <i class="bi bi-file-earmark-excel fs-1"></i>
+                        </div>
+                        <p>Upload file Excel dengan format yang sesuai</p>
                     </div>
-                    <p>Upload file Excel dengan format yang sesuai</p>
+                    
+                    <div class="alert alert-info small">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Download template terlebih dahulu untuk memastikan format benar
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="import_file" class="form-label">Pilih File Excel</label>
+                        <input type="file" class="form-control" id="import_file" name="file" accept=".xlsx,.xls,.csv" required>
+                        <div class="text-muted small mt-1">Maksimal ukuran file: 5MB</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="import_class_id" class="form-label">Tambahkan ke Kelas (Opsional)</label>
+                        <select class="form-select" id="import_class_id" name="class_id">
+                            <option value="">Pilih Kelas</option>
+                            @foreach($classes as $class)
+                            <option value="{{ $class->id }}">{{ $class->class_name }} ({{ $class->class_code }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="skip_duplicates" id="skipDuplicates" value="1" checked>
+                        <label class="form-check-label" for="skipDuplicates">
+                            Lewati data yang sudah ada (berdasarkan NIS)
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="send_email" id="sendEmail" value="1">
+                        <label class="form-check-label" for="sendEmail">
+                            Kirim email notifikasi ke siswa
+                        </label>
+                    </div>
                 </div>
-                
-                <div class="alert alert-info small">
-                    <i class="bi bi-info-circle me-2"></i>
-                    Download template terlebih dahulu untuk memastikan format benar
-                </div>
-                
-                <div class="mt-4 text-center">
-                    <a href="#" class="btn btn-outline-primary me-2">
-                        <i class="bi bi-download me-2"></i>
-                        Template
+                <div class="modal-footer border-0 pt-0">
+                    <a href="{{ route('students.import.template') }}" class="btn btn-outline-primary me-2">
+                        <i class="bi bi-download me-2"></i>Download Template
                     </a>
-                    <button class="btn btn-primary">
-                        <i class="bi bi-upload me-2"></i>
-                        Upload File
+                    <button type="button" class="btn btn-outline-secondary me-2" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary" id="importSubmitBtn">
+                        <i class="bi bi-upload me-2"></i>Import
                     </button>
                 </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary mb-3" role="status" style="width: 2.5rem; height: 2.5rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h6 class="mb-2">Sedang Mengimport Data...</h6>
+                <p class="text-muted small mb-0">Mohon tunggu, proses import sedang berjalan</p>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Delete Modals -->
-@foreach($students as $student)
-<div class="modal fade" id="deleteModal{{ $student->id }}" tabindex="-1">
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header border-0 pb-0">
                 <h5 class="modal-title">Konfirmasi Hapus</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <div class="text-center mb-4">
-                    <div class="student-avatar-lg mb-3">
-                        {{ strtoupper(substr($student->name, 0, 2)) }}
-                    </div>
-                    <h6>{{ $student->name }}</h6>
-                    <p class="text-muted mb-0">{{ $student->nis_nip }}</p>
+            <div class="modal-body text-center pt-0">
+                <div class="delete-icon mx-auto mb-3">
+                    <i class="bi bi-trash3 fs-1 text-danger"></i>
                 </div>
-                <p class="text-center">Apakah Anda yakin ingin menghapus siswa <strong>{{ $student->name }}</strong>?</p>
+                <h6 id="deleteStudentName">Nama Siswa</h6>
+                <p class="mb-3">Apakah Anda yakin ingin menghapus siswa ini?</p>
                 <div class="alert alert-danger small">
                     <i class="bi bi-exclamation-triangle me-2"></i>
                     Tindakan ini tidak dapat dibatalkan. Semua data siswa akan dihapus permanen.
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <form action="{{ route('students.destroy', $student) }}" method="POST">
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                <form id="deleteForm" method="POST">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Hapus</button>
+                    <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
-@endforeach
 
 <style>
+/* CSS Variables */
 :root {
-    --primary-color: #4f46e5;
+    --primary: #4f46e5;
     --primary-light: #e0e7ff;
-    --success-color: #10b981;
+    --success: #10b981;
     --success-light: #d1fae5;
-    --danger-color: #ef4444;
-    --danger-light: #fee2e2;
-    --warning-color: #f59e0b;
+    --warning: #f59e0b;
     --warning-light: #fef3c7;
+    --danger: #ef4444;
+    --danger-light: #fee2e2;
+    --info: #06b6d4;
+    --info-light: #cffafe;
     --border-radius: 12px;
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
     --transition: all 0.2s ease;
 }
 
 /* Page Header */
 .page-header {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.page-icon-large {
+    width: clamp(44px, 10vw, 56px);
+    height: clamp(44px, 10vw, 56px);
+    border-radius: 14px;
+    background: linear-gradient(135deg, #4f46e5, #3730a3);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(1.25rem, 3vw, 1.5rem);
+    flex-shrink: 0;
 }
 
 .page-title {
-    font-size: 1.75rem;
+    font-size: clamp(1.25rem, 5vw, 1.5rem);
     font-weight: 700;
     color: #1f2937;
-    margin-bottom: 0.25rem;
 }
 
 .page-subtitle {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     color: #6b7280;
 }
 
 /* Filter Form */
-.filter-form .input-group-search {
-    position: relative;
-}
-
 .filter-form .input-group-text {
     background: white;
+    border: 1px solid #e5e7eb;
     border-right: none;
     border-radius: 8px 0 0 8px;
 }
@@ -375,18 +418,24 @@
     border-radius: 8px;
     border: 1px solid #e5e7eb;
     transition: var(--transition);
+    font-size: 0.813rem;
 }
 
 .filter-form .form-control:focus,
 .filter-form .form-select:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+    outline: none;
 }
 
-/* Card Styles */
+.filter-form .form-control {
+    border-radius: 0 8px 8px 0;
+}
+
+/* Card */
 .card {
-    border: none;
-    box-shadow: var(--shadow-sm);
+    background: white;
+    border: 1px solid #e5e7eb;
     border-radius: var(--border-radius);
     overflow: hidden;
 }
@@ -394,49 +443,25 @@
 .card-header {
     background: white;
     border-bottom: 1px solid #e5e7eb;
-    padding: 1.25rem 1.5rem;
+    padding: 0.875rem 1rem;
 }
 
 .card-title {
     font-weight: 600;
     color: #1f2937;
     margin: 0;
+    font-size: 0.938rem;
 }
 
 .card-subtitle {
-    font-size: 0.875rem;
+    font-size: 0.688rem;
     color: #6b7280;
-    margin: 0;
 }
 
-/* Table Styles */
-.table {
-    margin: 0;
-}
-
-.table thead th {
-    font-weight: 600;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #6b7280;
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid #e5e7eb;
-    background: #f9fafb;
-}
-
-.table tbody td {
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid #f3f4f6;
-    vertical-align: middle;
-}
-
-.table tbody tr:last-child td {
-    border-bottom: none;
-}
-
-.table tbody tr:hover {
-    background-color: #f9fafb;
+.card-footer {
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    padding: 0.75rem 1rem;
 }
 
 /* Student Avatar */
@@ -444,7 +469,7 @@
     width: 40px;
     height: 40px;
     border-radius: 10px;
-    background: linear-gradient(135deg, var(--primary-color), #7c3aed);
+    background: linear-gradient(135deg, #4f46e5, #3730a3);
     color: white;
     display: flex;
     align-items: center;
@@ -454,26 +479,12 @@
     flex-shrink: 0;
 }
 
-.student-avatar-lg {
-    width: 64px;
-    height: 64px;
-    border-radius: 16px;
-    background: linear-gradient(135deg, var(--primary-color), #7c3aed);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: 1.25rem;
-    margin: 0 auto;
-}
-
 .student-nis {
     background: #f3f4f6;
     padding: 0.25rem 0.5rem;
     border-radius: 6px;
-    font-family: 'SF Mono', Monaco, monospace;
-    font-size: 0.75rem;
+    font-family: monospace;
+    font-size: 0.688rem;
     color: #374151;
 }
 
@@ -482,17 +493,15 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.25rem;
-    max-width: 150px;
 }
 
 .class-tag {
-    background: var(--primary-light);
-    color: var(--primary-color);
+    background: #e0e7ff;
+    color: #4f46e5;
     padding: 0.25rem 0.5rem;
     border-radius: 6px;
-    font-size: 0.75rem;
+    font-size: 0.688rem;
     font-weight: 500;
-    white-space: nowrap;
 }
 
 .class-tag-more {
@@ -500,7 +509,7 @@
     color: #6b7280;
     padding: 0.25rem 0.5rem;
     border-radius: 6px;
-    font-size: 0.75rem;
+    font-size: 0.688rem;
     font-weight: 500;
 }
 
@@ -509,9 +518,9 @@
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
-    padding: 0.375rem 0.75rem;
+    padding: 0.25rem 0.625rem;
     border-radius: 20px;
-    font-size: 0.75rem;
+    font-size: 0.688rem;
     font-weight: 500;
 }
 
@@ -535,17 +544,53 @@
     font-size: 0.5rem;
 }
 
+/* Table */
+.table {
+    margin: 0;
+}
+
+.table thead th {
+    font-weight: 600;
+    font-size: 0.688rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6b7280;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+}
+
+.table tbody td {
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: middle;
+}
+
+.table tbody tr:hover {
+    background-color: #f9fafb;
+}
+
 /* Buttons */
 .btn {
     border-radius: 8px;
     font-weight: 500;
-    padding: 0.5rem 1rem;
+    padding: 0.375rem 0.875rem;
     transition: var(--transition);
+    font-size: 0.813rem;
+}
+
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+}
+
+.btn-group {
+    gap: 6px;
 }
 
 .btn-primary {
-    background: var(--primary-color);
-    border-color: var(--primary-color);
+    background: #4f46e5;
+    border-color: #4f46e5;
 }
 
 .btn-primary:hover {
@@ -553,40 +598,71 @@
     border-color: #4338ca;
 }
 
-.btn-icon {
-    width: 32px;
-    height: 32px;
-    padding: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    color: #6b7280;
+.btn-outline-primary {
+    border-color: #e5e7eb;
+    color: #4f46e5;
     background: white;
 }
 
-.btn-icon:hover {
+.btn-outline-primary:hover {
+    background: #4f46e5;
+    border-color: #4f46e5;
+    color: white;
+}
+
+.btn-outline-warning {
+    border-color: #e5e7eb;
+    color: #f59e0b;
+    background: white;
+}
+
+.btn-outline-warning:hover {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: white;
+}
+
+.btn-outline-danger {
+    border-color: #e5e7eb;
+    color: #ef4444;
+    background: white;
+}
+
+.btn-outline-danger:hover {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: white;
+}
+
+.btn-outline-secondary {
+    border-color: #e5e7eb;
+    color: #6b7280;
+}
+
+.btn-outline-secondary:hover {
     background: #f9fafb;
-    color: var(--primary-color);
     border-color: #d1d5db;
+    color: #374151;
 }
 
 /* Dropdown */
 .dropdown-menu {
-    border: none;
-    box-shadow: var(--shadow-lg);
-    border-radius: 8px;
-    padding: 0.5rem;
-    min-width: 160px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 0.375rem;
+    min-width: 140px;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
 }
 
 .dropdown-item {
     border-radius: 6px;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.813rem;
     display: flex;
     align-items: center;
+    gap: 0.5rem;
+    color: #1f2937;
 }
 
 .dropdown-item:hover {
@@ -595,80 +671,129 @@
 
 /* Empty State */
 .empty-state {
-    padding: 4rem 2rem;
-    text-align: center;
+    padding: 2rem 1rem;
 }
 
-.empty-state-icon {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 1.5rem;
+.empty-icon {
+    width: 64px;
+    height: 64px;
     background: #f9fafb;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
-    color: #9ca3af;
+    margin: 0 auto;
 }
 
 .empty-state h5 {
-    font-size: 1.25rem;
+    font-size: 1rem;
     font-weight: 600;
     color: #1f2937;
-    margin-bottom: 0.5rem;
 }
 
-/* Import Modal */
-.import-icon {
-    width: 60px;
-    height: 60px;
-    margin: 0 auto 1rem;
-    background: var(--primary-light);
-    color: var(--primary-color);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
+.empty-state p {
+    font-size: 0.813rem;
+    color: #6b7280;
 }
 
 /* Modal */
 .modal-content {
+    background: white;
     border: none;
     border-radius: var(--border-radius);
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+}
+
+.modal-header {
+    border-bottom: 1px solid #e5e7eb;
+    padding: 1rem 1.25rem;
+}
+
+.modal-body {
+    padding: 1.25rem;
+}
+
+.delete-icon {
+    width: 64px;
+    height: 64px;
+    background: #fee2e2;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.import-icon {
+    width: 64px;
+    height: 64px;
+    background: #e0e7ff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #4f46e5;
+}
+
+/* Alert */
+.alert {
+    border-radius: 10px;
+}
+
+.alert-info {
+    background: #cffafe;
+    border-color: #06b6d4;
+    color: #155e75;
+}
+
+.alert-danger {
+    background: #fee2e2;
+    border-color: #ef4444;
+    color: #991b1b;
+}
+
+/* Form */
+.form-label {
+    font-weight: 500;
+    font-size: 0.813rem;
+    color: #374151;
+    margin-bottom: 0.375rem;
+}
+
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.813rem;
+    transition: var(--transition);
+}
+
+.form-control:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+    outline: none;
+}
+
+.form-check-input {
+    cursor: pointer;
+}
+
+.form-check-input:checked {
+    background-color: #4f46e5;
+    border-color: #4f46e5;
 }
 
 /* Responsive */
+@media (min-width: 992px) {
+    .student-avatar {
+        width: 44px;
+        height: 44px;
+    }
+}
+
 @media (max-width: 768px) {
     .container-fluid {
         padding-left: 1rem !important;
         padding-right: 1rem !important;
-    }
-    
-    .page-header .d-flex {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .filter-form .row {
-        gap: 1rem;
-    }
-    
-    .filter-form .col-md-2,
-    .filter-form .col-md-3,
-    .filter-form .col-md-5 {
-        width: 100%;
-    }
-    
-    .card-header {
-        padding: 1rem;
-    }
-    
-    .table thead th,
-    .table tbody td {
-        padding: 0.75rem 1rem;
     }
     
     .student-avatar {
@@ -677,135 +802,78 @@
         font-size: 0.75rem;
     }
     
-    .btn-icon {
-        width: 28px;
-        height: 28px;
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.688rem;
     }
     
-    .class-tags {
-        max-width: 100px;
+    .btn-group {
+        gap: 4px;
+    }
+    
+    .table thead th,
+    .table tbody td {
+        padding: 0.625rem;
     }
 }
 
-/* Dark Mode Support */
-@media (prefers-color-scheme: dark) {
-    .card,
-    .modal-content {
-        background: #1f2937;
-        border-color: #374151;
+@media (max-width: 576px) {
+    .card-header {
+        flex-direction: column;
+        align-items: stretch;
     }
     
-    .page-title,
-    .card-title,
-    .table tbody h6 {
-        color: #f9fafb;
+    .btn-group {
+        flex-wrap: wrap;
+        justify-content: flex-end;
     }
-    
-    .page-subtitle,
-    .card-subtitle,
-    .text-muted {
-        color: #9ca3af;
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
     }
-    
-    .table thead th {
-        background: #111827;
-        border-color: #374151;
-        color: #9ca3af;
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
-    
-    .table tbody td {
-        border-color: #374151;
-        color: #e5e7eb;
-    }
-    
-    .table tbody tr:hover {
-        background: #111827;
-    }
-    
-    .student-nis {
-        background: #374151;
-        color: #e5e7eb;
-    }
-    
-    .class-tag {
-        background: #374151;
-        color: #e5e7eb;
-    }
-    
-    .class-tag-more {
-        background: #4b5563;
-        color: #9ca3af;
-    }
-    
-    .btn-icon {
-        background: #374151;
-        border-color: #4b5563;
-        color: #9ca3af;
-    }
-    
-    .btn-icon:hover {
-        background: #4b5563;
-        color: #e5e7eb;
-    }
-    
-    .dropdown-menu {
-        background: #1f2937;
-        border: 1px solid #374151;
-    }
-    
-    .dropdown-item {
-        color: #e5e7eb;
-    }
-    
-    .dropdown-item:hover {
-        background: #374151;
-    }
-    
-    .empty-state-icon {
-        background: #374151;
-        color: #6b7280;
-    }
-    
-    .status-badge.active {
-        background: #064e3b;
-        color: #a7f3d0;
-    }
-    
-    .status-badge.inactive {
-        background: #374151;
-        color: #9ca3af;
-    }
-    
-    .filter-form .form-control,
-    .filter-form .form-select {
-        background: #1f2937;
-        border-color: #374151;
-        color: #e5e7eb;
-    }
-    
-    .filter-form .input-group-text {
-        background: #1f2937;
-        border-color: #374151;
-        color: #9ca3af;
-    }
+}
+
+.card {
+    animation: fadeIn 0.3s ease forwards;
 }
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Refresh button
-    document.getElementById('refreshBtn')?.addEventListener('click', function() {
-        this.classList.add('rotate');
-        setTimeout(() => {
-            window.location.reload();
-        }, 500);
-    });
+function confirmDelete(studentId, studentName) {
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    const deleteForm = document.getElementById('deleteForm');
+    const studentNameSpan = document.getElementById('deleteStudentName');
     
+    deleteForm.action = '/students/' + studentId;
+    studentNameSpan.textContent = studentName;
+    modal.show();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
     // Initialize tooltips
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function(tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
+    tooltipTriggerList.forEach(function(tooltipTriggerEl) {
+        new bootstrap.Tooltip(tooltipTriggerEl);
     });
+    
+    // Refresh button
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+            this.classList.add('rotate');
+            setTimeout(() => {
+                window.location.reload();
+            }, 300);
+        });
+    }
     
     // Filter form auto-submit on select change
     const classSelect = document.querySelector('select[name="class_id"]');
@@ -822,9 +890,48 @@ document.addEventListener('DOMContentLoaded', function() {
             this.closest('form').submit();
         });
     }
+    
+    // Import form submission
+    const importForm = document.getElementById('importForm');
+    const importSubmitBtn = document.getElementById('importSubmitBtn');
+    const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    
+    if (importForm && importSubmitBtn) {
+        importForm.addEventListener('submit', function(e) {
+            const fileInput = document.getElementById('import_file');
+            
+            if (!fileInput.files.length) {
+                e.preventDefault();
+                alert('Silakan pilih file terlebih dahulu');
+                return false;
+            }
+            
+            const fileName = fileInput.files[0].name;
+            const fileExt = fileName.split('.').pop().toLowerCase();
+            
+            if (!['xlsx', 'xls', 'csv'].includes(fileExt)) {
+                e.preventDefault();
+                alert('Format file tidak didukung. Gunakan .xlsx, .xls, atau .csv');
+                return false;
+            }
+            
+            const fileSize = fileInput.files[0].size;
+            const maxSize = 5 * 1024 * 1024;
+            
+            if (fileSize > maxSize) {
+                e.preventDefault();
+                alert('Ukuran file terlalu besar. Maksimal 5MB');
+                return false;
+            }
+            
+            loadingModal.show();
+            importSubmitBtn.disabled = true;
+            importSubmitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Memproses...';
+        });
+    }
 });
 
-// Add animation for refresh button
+// Refresh button animation
 const style = document.createElement('style');
 style.textContent = `
 @keyframes rotate {

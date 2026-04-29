@@ -5,7 +5,7 @@
                 <h5 class="modal-title">Beri Pengumuman</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ route('assignments.announce', $assignment) }}" method="POST">
+            <form action="{{ route('assignments.teacher.announce', $assignment) }}" method="POST">
                 @csrf
                 <div class="modal-body">
                     <div class="mb-3">

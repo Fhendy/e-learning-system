@@ -1,40 +1,43 @@
 <header class="header">
     <div class="container-fluid">
         <div class="header-content">
-            <!-- Sidebar Toggle for Mobile -->
-            <button class="sidebar-toggle" id="sidebarToggle">
-                <i class="bi bi-list"></i>
-            </button>
-            
-            <!-- Page Title (Mobile) -->
-            <div class="header-title d-block d-lg-none">
-                <h1 class="h5 mb-0">
-                    @yield('title', config('app.name'))
-                </h1>
+            <!-- Sidebar Toggle (kiri) -->
+            <div class="header-left">
+                <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar">
+                    <i class="bi bi-list"></i>
+                </button>
             </div>
             
-            <!-- Header Right -->
+            <!-- Page Title (center) -->
+            <div class="header-title">
+                <h1 class="header-title-text">@yield('title', config('app.name'))</h1>
+            </div>
+            
+            <!-- Header Right (kanan) - Profil di sini -->
             <div class="header-right">
                 <!-- User Menu -->
-                <div class="user-menu dropdown">
-                    <button class="user-btn" type="button" data-bs-toggle="dropdown">
+                <div class="user-wrapper">
+                    <button class="user-btn" id="userBtn" aria-label="User Menu">
                         <div class="user-avatar">
                             {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                         </div>
-                        <div class="user-info d-none d-md-block">
+                        <div class="user-info">
                             <span class="user-name">{{ auth()->user()->name }}</span>
                             <span class="user-role">{{ ucfirst(auth()->user()->role) }}</span>
                         </div>
-                        <i class="bi bi-chevron-down d-none d-md-block"></i>
+                        <i class="bi bi-chevron-down"></i>
                     </button>
-                    <div class="dropdown-menu dropdown-menu-end">
+                    <div class="user-dropdown" id="userDropdown">
                         <a href="{{ route('profile.edit') }}" class="dropdown-item">
                             <i class="bi bi-person me-2"></i>Profil
                         </a>
+                        <a href="{{ route('profile.edit') }}#password" class="dropdown-item">
+                            <i class="bi bi-shield-lock me-2"></i>Ubah Password
+                        </a>
                         <div class="dropdown-divider"></div>
-                        <form action="{{ route('logout') }}" method="POST" class="dropdown-item-form">
+                        <form action="{{ route('logout') }}" method="POST" id="logout-form-header">
                             @csrf
-                            <button type="submit" class="dropdown-item text-danger">
+                            <button type="submit" class="dropdown-item text-danger logout-btn">
                                 <i class="bi bi-box-arrow-right me-2"></i>Logout
                             </button>
                         </form>
@@ -46,15 +49,15 @@
 </header>
 
 <style>
-/* HEADER STYLES */
+/* Header Styles - Konsisten putih di semua device */
 .header {
-    background: white;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    height: 70px;
+    background: #ffffff !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    height: 64px;
     position: sticky;
     top: 0;
-    z-index: 1000; /* HARUS LEBIH TINGGI DARI SIDEBAR */
-    border-bottom: 1px solid #f1f5f9;
+    z-index: 1030;
+    border-bottom: 1px solid #e5e7eb;
     width: 100%;
 }
 
@@ -68,12 +71,18 @@
     align-items: center;
     justify-content: space-between;
     height: 100%;
-    padding: 0 20px;
-    gap: 15px;
-    background: white; /* Pastikan background solid */
+    padding: 0 1.5rem;
+    gap: 1rem;
+    background: #ffffff !important;
 }
 
-/* Sidebar Toggle (Mobile Only) */
+/* Header Left (Sidebar Toggle) */
+.header-left {
+    flex-shrink: 0;
+    min-width: 40px;
+}
+
+/* Sidebar Toggle */
 .sidebar-toggle {
     background: none;
     border: none;
@@ -86,9 +95,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    flex-shrink: 0;
-    z-index: 1001; /* Lebih tinggi dari header */
-    position: relative; /* Untuk z-index bekerja */
+    transition: all 0.2s ease;
 }
 
 .sidebar-toggle:hover {
@@ -101,44 +108,41 @@
     }
 }
 
-/* Page Title (Mobile Only) */
+/* Header Title - Center */
 .header-title {
     flex: 1;
-    overflow: hidden;
     text-align: center;
-    position: relative;
-    z-index: 1;
 }
 
-.header-title h1 {
+.header-title-text {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: #1e293b;
-    font-weight: 600;
-    font-size: 1rem;
-    margin: 0;
 }
 
-@media (min-width: 992px) {
-    .header-title {
-        display: none;
+@media (max-width: 768px) {
+    .header-title-text {
+        font-size: 1rem;
     }
 }
 
-/* Header Right */
+/* Header Right - Profil di kanan */
 .header-right {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
     flex-shrink: 0;
-    position: relative;
-    z-index: 1;
+    min-width: 40px;
 }
 
-/* User Menu */
-.user-menu {
+/* User Menu Styles */
+.user-wrapper {
     position: relative;
-    z-index: 1;
 }
 
 .user-btn {
@@ -146,13 +150,11 @@
     border: none;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 5px;
+    gap: 0.75rem;
+    padding: 0.25rem 0.75rem;
     cursor: pointer;
     border-radius: 8px;
-    min-width: 0;
-    position: relative;
-    z-index: 1;
+    transition: all 0.2s ease;
 }
 
 .user-btn:hover {
@@ -160,23 +162,21 @@
 }
 
 .user-avatar {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
-    background: #4f46e5;
     background: linear-gradient(135deg, #4f46e5, #3730a3);
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 0.875rem;
     flex-shrink: 0;
 }
 
 .user-info {
-    text-align: left;
-    min-width: 0;
+    text-align: right;
 }
 
 .user-name {
@@ -184,54 +184,80 @@
     font-weight: 600;
     font-size: 0.875rem;
     color: #1e293b;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 120px;
+    line-height: 1.3;
 }
 
 .user-role {
     display: block;
-    font-size: 0.75rem;
-    color: #64748b;
+    font-size: 0.688rem;
+    color: #6b7280;
 }
 
 .user-btn i {
-    font-size: 0.875rem;
-    color: #64748b;
+    font-size: 0.75rem;
+    color: #6b7280;
+    transition: transform 0.2s ease;
 }
 
-/* Dropdown Menu */
-.user-menu .dropdown-menu {
-    width: 200px;
-    border: none;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-    padding: 8px;
-    margin-top: 10px;
-    border: 1px solid #f1f5f9;
-    z-index: 1002; /* Lebih tinggi dari header */
+.user-btn[aria-expanded="true"] i {
+    transform: rotate(180deg);
+}
+
+.user-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 240px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    margin-top: 0.5rem;
+    display: none;
+    z-index: 1050;
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+}
+
+.user-dropdown.show {
+    display: block;
+    animation: fadeIn 0.2s ease-out;
+}
+
+/* Dropdown Items */
+.dropdown-header {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.dropdown-header h6 {
+    margin: 0;
+    font-weight: 600;
+    color: #1e293b;
 }
 
 .dropdown-item {
     display: flex;
     align-items: center;
-    padding: 10px 12px;
-    border-radius: 6px;
-    color: #334155;
-    font-size: 0.875rem;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    color: #1e293b;
     text-decoration: none;
+    transition: background 0.2s ease;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    font-size: 0.875rem;
 }
 
 .dropdown-item:hover {
     background: #f8fafc;
-    color: #4f46e5;
 }
 
 .dropdown-item i {
-    width: 20px;
-    margin-right: 10px;
     font-size: 1rem;
+    width: 20px;
 }
 
 .dropdown-item.text-danger {
@@ -239,100 +265,79 @@
 }
 
 .dropdown-item.text-danger:hover {
-    background: rgba(239, 68, 68, 0.1);
+    background: #fef2f2;
 }
 
 .dropdown-divider {
-    margin: 8px 12px;
-    border-top: 1px solid #f1f5f9;
+    height: 1px;
+    background: #e5e7eb;
+    margin: 0.5rem 0;
 }
 
-.dropdown-item-form {
-    padding: 0;
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.dropdown-item-form button {
-    width: 100%;
-    text-align: left;
-    background: none;
-    border: none;
-    padding: 10px 12px;
-    font: inherit;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
+/* Responsive Desktop */
+@media (min-width: 992px) {
+    .header-content {
+        padding: 0 2rem;
+    }
+    
+    .user-info {
+        display: block !important;
+    }
+    
+    .user-btn {
+        padding: 0.25rem 1rem;
+    }
 }
 
-/* Responsive */
+/* Responsive Mobile */
 @media (max-width: 768px) {
     .header-content {
-        padding: 0 15px;
+        padding: 0 1rem;
     }
     
     .user-info {
         display: none;
     }
     
-    .user-btn i {
-        display: none;
+    .user-btn {
+        padding: 0.25rem 0.5rem;
     }
     
-    .user-menu .dropdown-menu {
-        width: 180px;
-        position: fixed !important;
-        top: 60px !important;
-        right: 15px !important;
-        left: auto !important;
-        z-index: 1002;
-    }
-    
-    .user-avatar {
-        width: 36px;
-        height: 36px;
-        font-size: 0.9rem;
+    .user-dropdown {
+        position: fixed;
+        top: 60px;
+        right: 10px;
+        left: auto;
+        width: 280px;
+        max-width: calc(100% - 20px);
     }
 }
 
 @media (max-width: 576px) {
-    .header-content {
-        padding: 0 10px;
+    .header-title-text {
+        font-size: 0.875rem;
     }
     
-    .header-title h1 {
-        font-size: 0.9rem;
-    }
-    
-    .user-menu .dropdown-menu {
-        right: 10px !important;
-        top: 60px !important;
-    }
-}
-
-/* Small Phones */
-@media (max-width: 375px) {
     .user-avatar {
         width: 32px;
         height: 32px;
+        font-size: 0.75rem;
     }
     
-    .sidebar-toggle {
-        width: 36px;
-        height: 36px;
-    }
-}
-
-/* Pastikan header selalu di atas sidebar */
-@media (max-width: 991px) {
-    .header {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        width: 100%;
-    }
-    
-    .main-content {
-        margin-top: 70px; /* Beri margin top untuk konten */
+    .user-dropdown {
+        width: 260px;
     }
 }
 </style>
