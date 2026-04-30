@@ -61,5 +61,5 @@ Sebelum menginstall aplikasi, pastikan server Anda memenuhi persyaratan berikut:
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/e-learning-system.git
+git clone https://github.com/Fhendy/e-learning-system.git
 cd e-learning-system
